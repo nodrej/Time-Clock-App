@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Time Tracking Kiosk</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 95%; /* Increased from 800px to 95% of screen width */
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+      }
+      h1 {
+        color: #4285f4;
+        text-align: center;
+      }
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      input, button {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      button {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #3367d6;
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .clock-button {
+        padding: 15px;
+        font-size: 18px;
+      }
+      .break-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .status-display {
+        background-color: #e8f0fe;
+        border-radius: 4px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .hidden {
+        display: none;
+      }
+      .status-text {
+        font-weight: bold;
+        font-size: 18px;
+      }
+      .timestamp {
+        font-size: 14px;
+        color: #666;
+      }
+      .employee-info {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .logout {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .logout a {
+        color: #4285f4;
+        text-decoration: none;
+      }
+      #clock {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+      #processingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+
+      .close-button:hover {
+        opacity: 1;
+      }
+
+      .spinner {
+        border: 6px solid #e8f0fe;
+        border-top: 6px solid #4285f4;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+      
+      /* Employee grid styles - UPDATED */
+      .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      
+      /* Updated employee card styles for uniform size */
+      .employee-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-top: 25px;
+        height: 100px; /* Fixed height for all cards */
+        width: 100%; /* Full width of grid cell */
+      }
+      
+      .employee-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      }
+      
+      .employee-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+      }
+      
+      .back-button {
+        background-color: #f1f1f1;
+        color: #333;
+        margin-bottom: 15px;
+      }
+      
+      /* Status indicator styles */
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-bottom: 10px; /* Space between indicator and name */
+      }
+      
+      .status-clocked-in {
+        background-color: #4CAF50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+      }
+      
+      .status-on-break {
+        background-color: #FFC107;
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.7);
+      }
+      
+      .status-clocked-out {
+        background-color: #9E9E9E;
+        box-shadow: 0 0 5px rgba(158, 158, 158, 0.7);
+      }
+      
+      /* Loading placeholder styles */
+      .employee-placeholder {
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        height: 100px; /* Match the height of employee cards */
+        animation: pulse 1.5s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+      }
+      
+      /* Work duration display */
+      .work-duration {
+        margin-top: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #4CAF50;
+      }
+      
+      /* Message styling improvements */
+      .processing-content {
+        position: relative;
+        background-color: white;
+        padding: 30px;
+        border-radius: 12px;
+        min-width: 350px;
+        max-width: 500px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Message icon styles */
+      .message-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+
+      .icon-success {
+        background-color: #e7f7ed;
+        color: #28a745;
+      }
+
+      .icon-warning {
+        background-color: #fff8e6;
+        color: #ffc107;
+      }
+
+      .icon-error {
+        background-color: #ffebee;
+        color: #dc3545;
+      }
+
+      .icon-info {
+        background-color: #e8f0fe;
+        color: #4285f4;
+      }
+
+      /* Message content styles */
+      #processingMessage {
+        color: #333;
+        font-size: 22px;
+        font-weight: 500;
+        margin-bottom: 15px;
+      }
+
+      .message-details {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        width: 100%;
+        text-align: left;
+        border-left: 4px solid #4285f4;
+      }
+
+      /* Time metrics display */
+      .time-metric {
+        margin-top: 5px;
+        display: flex;
+        justify-content: space-between;
+        color: #555;
+        font-size: 16px;
+      }
+
+      .time-metric.warning {
+        color: #e65100;
+      }
+
+      .time-value {
+        font-weight: bold;
+      }
+
+      /* Countdown styling */
+      #countdown {
+        font-size: 24px;
+        margin-top: 20px;
+        color: #4285f4;
+        font-weight: bold;
+        background-color: #e8f0fe;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .break-indicators {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.break-indicator {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.break-indicator::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.break-available::before {
+  background-color: #4CAF50;
+}
+
+.break-partial::before {
+  background-color: #FFC107;
+}
+
+.break-used::before {
+  background-color: #9E9E9E;
+}
+
+/* Break timer styles */
+.break-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 15px 0;
+}
+
+#breakTimerDisplay {
+  font-size: 42px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: monospace;
+}
+
+.timer-exceeded {
+  color: #e53935;
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+.timer-warning {
+  color: #ff9800;
+  animation: pulse-yellow 2s infinite;
+}
+
+@keyframes pulse-yellow {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+/* Time report styles */
+#employee-time-report {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+#employee-time-report h3 {
+  color: #4285f4;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.summary-box {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.time-logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.time-logs-table th, .time-logs-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.time-logs-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .summary-value {
+    font-size: 16px;
+  }
+  
+  .time-logs-table {
+    font-size: 14px;
+  }
+}
+
+  /* Fixed logout button styles */
+  .fixed-logout-button {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 900;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 15px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.fixed-logout-button:hover {
+  background-color: #d32f2f;
+}
+
+.fixed-logout-button i {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* Add more padding to the top of the container to avoid overlap with larger button */
+.container {
+  padding-top: 20px;
+}
+
+/* Modal overlay styles */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.modal-content p {
+  margin-bottom: 16px;
+}
+
+.modal-content input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.button-container {
+  text-align: right;
+}
+
+.modal-content button {
+  padding: 10px 20px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.modal-content button:hover {
+  background-color: #3367d6;
+}
+
+.error-message {
+  color: #e53935;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.button-container {
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondary-button {
+  padding: 10px 20px;
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.secondary-button:hover {
+  background-color: #d0d0d0;
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="processingOverlay" class="hidden">
+      <div class="processing-content">
+        <button class="close-button" onclick="closeProcessingOverlay()">×</button>
+        <div id="messageIconContainer">
+          <div class="message-icon icon-info">
+            <span id="messageIcon">i</span>
+          </div>
+        </div>
+        <div id="processingMessage">Processing...</div>
+        <div id="messageDetails" class="message-details hidden"></div>
+        <div id="countdown" class="hidden">5</div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <h1>Employee Time Tracker</h1>
+      
+      <div id="clock"></div>
+      
+      <!-- Employee Selection Section -->
+      <div id="employeeSelectionSection" class="card">
+        <h2>Select Your Name</h2>
+        <div id="employeeGrid" class="employee-grid">
+          <!-- Loading placeholders will be added here -->
+        </div>
+      </div>
+      
+      <!-- PIN Entry Section (hidden initially) -->
+      <div id="pinSection" class="card hidden">
+        <button class="back-button" onclick="showEmployeeSelection()">← Back to Employee Selection</button>
+        <h2>Enter Your PIN</h2>
+        <div id="selectedEmployeeInfo" class="employee-info"></div>
+        <div class="login-form">
+          <input type="password" id="pin" placeholder="PIN" required>
+          <button onclick="verifyPin()">Login</button>
+        </div>
+        <p id="loginMessage" style="color: red;"></p>
+      </div>
+      
+      <!-- Actions Section (hidden initially) -->
+      <div id="actionsSection" class="hidden">
+        <div class="card employee-info">
+          <h2 id="welcomeMessage">Welcome</h2>
+        </div>
+        
+        <div class="card status-display">
+          <p class="status-text" id="statusText">Not Clocked In</p>
+          <p class="timestamp" id="statusTimestamp"></p>
+        </div>
+
+        
+        <!-- New fixed logout button (initially hidden) -->
+        <button id="fixedLogoutButton" class="fixed-logout-button hidden" onclick="logout()">
+          <i>←</i> Logout
+        </button>
+
+        <!-- Break Timer (initially hidden) -->
+<div id="breakTimerCard" class="card hidden">
+  <h2>Break Timer</h2>
+  <div class="break-timer">
+    <div id="breakTimerDisplay">00:00</div>
+    <div id="breakTimerLabel">Regular Break (15 min limit)</div>
+  </div>
+</div>
+        
+        <div class="card">
+          <h2>Clock In/Out</h2>
+          <div class="action-buttons">
+            <button id="clockInBtn" class="clock-button" onclick="clockIn()">Clock In</button>
+            <button id="clockOutBtn" class="clock-button" onclick="clockOut()">Clock Out</button>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2>Breaks</h2>
+            <div class="break-buttons">
+            <button id="startRegularBreakBtn" onclick="startBreak('regular')">Start Regular Break</button>
+            <button id="endRegularBreakBtn" onclick="endBreak('regular')">End Regular Break</button>
+            <button id="startLunchBtn" onclick="startBreak('lunch')">Start Lunch Break</button>
+            <button id="endLunchBtn" onclick="endBreak('lunch')">End Lunch Break</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Break Status</h2>
+          <div class="break-indicators">
+            <div class="break-indicator" id="regularBreakIndicator">Regular Breaks: 2/2 remaining</div>
+            <div class="break-indicator" id="lunchBreakIndicator">Lunch Break: Available</div>
+          </div>
+        </div>
+        <!-- Employee Time Report Section -->
+<div id="employee-time-report" class="card mt-4" style="display: none;">
+  <h3>My Time Report - Current Pay Period</h3>
+  <div id="report-loading" class="text-center py-3" style="display: none;">
+    <div class="spinner"></div>
+    <p>Loading your time report...</p>
+  </div>
+  
+  <div id="report-content">
+    <div class="summary-box">
+      <div class="row">
+        <div class="col">
+          <h4>Pay Period: <span id="pay-period-dates"></span></h4>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-3 col-6 mb-3">
+          <div class="summary-item">
+            <span class="summary-label">Total Hours Worked:</span>
+            <span id="total-hours-worked" class="summary-value">0.00</span>
+          </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <div class="summary-item">
+            <span class="summary-label">Regular Break Time:</span>
+            <span id="regular-break-time" class="summary-value">0.00</span>
+          </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <div class="summary-item">
+            <span class="summary-label">Lunch Break Time:</span>
+            <span id="lunch-break-time" class="summary-value">0.00</span>
+          </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+          <div class="summary-item">
+            <span class="summary-label">Missed Minutes:</span>
+            <span id="total-missed-minutes" class="summary-value">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <h4 class="mt-4">Individual Time Logs</h4>
+    <div class="table-responsive">
+      <table class="table table-striped time-logs-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Hours</th>
+            <th>Breaks</th>
+            <th>Missed Min</th>
+          </tr>
+        </thead>
+        <tbody id="time-logs-body">
+          <!-- Time logs will be populated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+      </div>
+
+
+      
+      <div id="messageArea" class="card hidden">
+        <p id="message"></p>
+        <button onclick="hideMessage()">OK</button>
+      </div>
+
+    </div>
+    
+<!-- Email Collection Overlay -->
+<div id="emailCollectionOverlay" class="overlay hidden">
+  <div class="modal-content">
+    <h2>Email Required</h2>
+    <p>Please provide your email address to continue:</p>
+    <input type="email" id="employeeEmail" placeholder="Enter your email address" required>
+    <p id="emailMessage" class="error-message"></p>
+    <div class="button-container">
+      <button id="saveEmailBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+    <script>
+      // Global variables
+      let currentEmployee = null;
+      let selectedEmployeeId = null;
+      let clockIntervalId = null;
+      let cachedEmployees = null;
+      let isLoadingEmployees = false;
+      let statusRefreshIntervalId = null;
+
+      // Start the automatic status refresh timer
+function startStatusRefreshTimer() {
+  // Clear any existing timer first
+  stopStatusRefreshTimer();
+  
+  // Set up a new timer that refreshes every 15 seconds
+  statusRefreshIntervalId = setInterval(function() {
+    // Only refresh if we're on the employee selection screen
+    if (!document.getElementById('employeeSelectionSection').classList.contains('hidden')) {
+      console.log("Auto-refreshing employee statuses...");
+      loadEmployeesWithStatus();
+    }
+  }, 120000); // 120 seconds
+}
+
+// Stop the status refresh timer
+function stopStatusRefreshTimer() {
+  if (statusRefreshIntervalId) {
+    clearInterval(statusRefreshIntervalId);
+    statusRefreshIntervalId = null;
+  }
+}
+
+      // Timer variables
+let breakTimerInterval = null;
+let breakStartTime = null;
+let breakTimeLimit = 0; // in minutes
+      
+      function showProcessingOverlay(message) {
+        document.getElementById('processingMessage').innerText = message;
+        document.getElementById('countdown').classList.add('hidden');
+        document.getElementById('messageDetails').classList.add('hidden');
+        
+        // Show processing icon
+        const iconContainer = document.getElementById('messageIconContainer');
+        const iconElement = document.getElementById('messageIcon');
+        const iconDiv = iconContainer.getElementsByClassName('message-icon')[0];
+        iconDiv.classList.remove('icon-success', 'icon-warning', 'icon-error');
+        iconDiv.classList.add('icon-info');
+        iconElement.innerHTML = 'i';
+        
+        document.getElementById('processingOverlay').classList.remove('hidden');
+      }
+
+      function closeProcessingOverlay() {
+        document.getElementById('processingOverlay').classList.add('hidden');
+        document.getElementById('countdown').classList.add('hidden');
+      }
+
+      // Show improved message with icon and formatting
+      function showMessage(text, type = 'success', details = null) {
+        // Set message text
+        document.getElementById('processingMessage').innerText = text;
+        
+        // Configure icon based on message type
+        const iconContainer = document.getElementById('messageIconContainer');
+        const iconElement = document.getElementById('messageIcon');
+        const iconDiv = iconContainer.getElementsByClassName('message-icon')[0];
+        
+        // Remove all existing icon classes
+        iconDiv.classList.remove('icon-success', 'icon-warning', 'icon-error', 'icon-info');
+        
+        // Set appropriate icon and class based on type
+        switch(type) {
+          case 'success':
+            iconDiv.classList.add('icon-success');
+            iconElement.innerHTML = '✓';
+            break;
+          case 'warning':
+            iconDiv.classList.add('icon-warning');
+            iconElement.innerHTML = '!';
+            break;
+          case 'error':
+            iconDiv.classList.add('icon-error');
+            iconElement.innerHTML = '✕';
+            break;
+          case 'info':
+          default:
+            iconDiv.classList.add('icon-info');
+            iconElement.innerHTML = 'i';
+            break;
+        }
+        
+        // Handle details display if provided
+        const detailsContainer = document.getElementById('messageDetails');
+        if (details) {
+          detailsContainer.innerHTML = formatMessageDetails(details);
+          detailsContainer.classList.remove('hidden');
+        } else {
+          detailsContainer.classList.add('hidden');
+        }
+        
+        // Show overlay and countdown for success/info messages
+        document.getElementById('processingOverlay').classList.remove('hidden');
+        
+        // Add countdown for non-error messages
+        if (type !== 'error') {
+          document.getElementById('countdown').classList.remove('hidden');
+          startCountdown();
+        } else {
+          document.getElementById('countdown').classList.add('hidden');
+        }
+      }
+
+      // Format message details into HTML
+      function formatMessageDetails(details) {
+        if (typeof details === 'string') {
+          return details;
+        }
+        
+        let html = '';
+        
+        // Handle missed time metrics
+        if (details.lateMinutes > 0) {
+          html += `
+            <div class="time-metric warning">
+              <span>Late arrival:</span>
+              <span class="time-value">${details.lateMinutes.toFixed(2)} minutes</span>
+            </div>
+          `;
+        }
+        
+        if (details.earlyMinutes > 0) {
+          html += `
+            <div class="time-metric warning">
+              <span>Early departure:</span>
+              <span class="time-value">${details.earlyMinutes.toFixed(2)} minutes</span>
+            </div>
+          `;
+        }
+        
+        if (details.extendedBreakMinutes > 0) {
+          html += `
+            <div class="time-metric warning">
+              <span>Extended break:</span>
+              <span class="time-value">${details.extendedBreakMinutes.toFixed(2)} minutes</span>
+            </div>
+          `;
+        }
+        
+        if (details.payPeriodMissedMinutes > 0) {
+          html += `
+            <div class="time-metric">
+              <span>Total missed this pay period:</span>
+              <span class="time-value">${details.payPeriodMissedMinutes.toFixed(2)} minutes</span>
+            </div>
+          `;
+        }
+        
+        return html;
+      }
+
+      function startCountdown() {
+        let count = 5;
+        const countdownElement = document.getElementById('countdown');
+        countdownElement.innerText = count;
+        countdownElement.classList.remove('hidden');
+        
+        const countdownInterval = setInterval(() => {
+          count--;
+          countdownElement.innerText = count;
+          
+          if (count <= 0) {
+            clearInterval(countdownInterval);
+            closeProcessingOverlay();
+          }
+        }, 1000);
+      }
+
+// After successful authentication, check if email is missing
+function checkEmployeeEmail() {
+  if (!currentEmployee) return;
+  
+  showProcessingOverlay('Checking account information...');
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      closeProcessingOverlay();
+      
+      if (result.success && result.emailMissing) {
+        // Show email collection overlay
+        document.getElementById('emailCollectionOverlay').classList.remove('hidden');
+      }
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      console.error("Error checking email: " + error.message);
+    })
+    .checkAndSaveEmployeeEmail(currentEmployee.employeeId);
+}
+
+
+
+
+// Function to save the provided email
+function saveEmployeeEmail() {
+  const emailInput = document.getElementById('employeeEmail');
+  const email = emailInput.value.trim();
+  const emailMessage = document.getElementById('emailMessage');
+  
+  // Basic email validation
+  if (!email) {
+    emailMessage.innerText = 'Please enter your email address';
+    return;
+  }
+  
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    emailMessage.innerText = 'Please enter a valid email address';
+    return;
+  }
+  
+  // Clear any previous error message
+  emailMessage.innerText = '';
+  
+  // Show processing overlay
+  showProcessingOverlay('Saving your email...');
+  
+  // Call server function to save the email
+  google.script.run
+    .withSuccessHandler(function(result) {
+      closeProcessingOverlay();
+      
+      if (result.success) {
+        // Hide the email collection overlay
+        document.getElementById('emailCollectionOverlay').classList.add('hidden');
+        showMessage("Email saved successfully", 'success');
+      } else {
+        emailMessage.innerText = result.message || 'Failed to save email';
+      }
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      emailMessage.innerText = error.message || 'Error saving email';
+    })
+    .checkAndSaveEmployeeEmail(currentEmployee.employeeId, email);
+}
+
+
+      function resetToEmployeeSelection() {
+  // Hide all sections except employee selection
+  document.getElementById('pinSection').classList.add('hidden');
+  document.getElementById('actionsSection').classList.add('hidden');
+  document.getElementById('employeeSelectionSection').classList.remove('hidden');
+  
+  // Hide the fixed logout button
+  document.getElementById('fixedLogoutButton').classList.add('hidden');
+
+  // Stop any active timer
+  stopBreakTimer();
+  
+  // Clear the input fields
+  document.getElementById('pin').value = '';
+  document.getElementById('loginMessage').innerText = '';
+  
+  // Reset current employee
+  currentEmployee = null;
+  selectedEmployeeId = null;
+  
+  // Reload employees with their updated status
+  loadEmployeesWithStatus();
+  
+  // Restart the status refresh timer
+  startStatusRefreshTimer();
+}
+
+      
+      // Update clock display
+      function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString();
+      }
+      
+      // Initialize on page load
+function onLoad() {
+  updateClock();
+  clockIntervalId = setInterval(updateClock, 1000);
+  
+  // Show loading placeholders immediately
+  showLoadingPlaceholders();
+  
+  // Load employees with status
+  loadEmployeesWithStatus();
+  
+  // Start the auto-refresh timer
+  startStatusRefreshTimer();
+
+// Add event listeners for email collection buttons
+  document.getElementById('saveEmailBtn').addEventListener('click', saveEmployeeEmail);
+  
+  // Add event listener for Enter key on PIN input
+  document.getElementById('pin').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent default form submission
+      verifyPin();
+    }
+  });
+}
+
+
+      
+      // Show loading placeholders while waiting for employee data
+      function showLoadingPlaceholders() {
+        const grid = document.getElementById('employeeGrid');
+        grid.innerHTML = '';
+        
+        // Add 12 placeholder elements
+        for (let i = 0; i < 12; i++) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'employee-placeholder';
+          grid.appendChild(placeholder);
+        }
+      }
+      
+      // Load active employees with their current status
+      function loadEmployeesWithStatus() {
+        if (isLoadingEmployees) return; // Prevent multiple simultaneous calls
+        
+        isLoadingEmployees = true;
+        
+        // Show loading placeholders if we don't have cached data
+        if (!cachedEmployees) {
+          showLoadingPlaceholders();
+        }
+        
+        // First get all active employees
+        google.script.run
+          .withSuccessHandler(function(employees) {
+            // Then get live status for all employees
+            google.script.run
+              .withSuccessHandler(function(statusData) {
+                handleEmployeesWithStatusLoaded(employees, statusData);
+                isLoadingEmployees = false;
+              })
+              .withFailureHandler(function(error) {
+                handleLoadFailure(error);
+                isLoadingEmployees = false;
+              })
+              .getLiveEmployeeStatus();
+          })
+          .withFailureHandler(function(error) {
+            handleLoadFailure(error);
+            isLoadingEmployees = false;
+          })
+          .getActiveEmployees();
+      }
+      
+      // Handle successful employee loading with status data
+      function handleEmployeesWithStatusLoaded(employees, statusData) {
+        closeProcessingOverlay();
+        
+        // Create a map of employee IDs to their status
+        const statusMap = {};
+        statusData.forEach(status => {
+          statusMap[status.employeeId] = status.status;
+        });
+        
+        // Add status to each employee
+        employees.forEach(emp => {
+          emp.status = statusMap[emp.employeeId] || "Not Clocked In";
+        });
+        
+        // Cache the employees data
+        cachedEmployees = employees;
+        
+        displayEmployeesWithStatus(employees);
+      }
+      
+      // Display employees in grid with status indicators
+      function displayEmployeesWithStatus(employees) {
+        const grid = document.getElementById('employeeGrid');
+        grid.innerHTML = '';
+        
+        if (employees.length === 0) {
+          const noResults = document.createElement('p');
+          noResults.textContent = 'No employees found';
+          grid.appendChild(noResults);
+          return;
+        }
+        
+        // Sort employees by name
+        employees.sort((a, b) => {
+          const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+          const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        
+        employees.forEach(emp => {
+          const card = document.createElement('div');
+          card.className = 'employee-card';
+          card.dataset.employeeId = emp.employeeId;
+          card.onclick = function() { selectEmployee(emp); };
+          
+          // Create and add status indicator
+          const statusIndicator = document.createElement('div');
+          statusIndicator.className = 'status-indicator';
+          
+          if (emp.status === "Clocked In") {
+            statusIndicator.classList.add('status-clocked-in');
+          } else if (emp.status === "On Regular Break" || emp.status === "On Lunch Break") {
+            statusIndicator.classList.add('status-on-break');
+          } else {
+            statusIndicator.classList.add('status-clocked-out');
+          }
+          
+          const name = document.createElement('div');
+          name.className = 'employee-name';
+          name.textContent = `${emp.firstName} ${emp.lastName}`;
+          
+          card.appendChild(statusIndicator);
+          card.appendChild(name);
+          grid.appendChild(card);
+        });
+      }
+      
+      // Helper function to update cached employee status
+      function updateCachedEmployeeStatus(employeeId, newStatus) {
+        if (cachedEmployees && employeeId) {
+          for (let i = 0; i < cachedEmployees.length; i++) {
+            if (cachedEmployees[i].employeeId === employeeId) {
+              cachedEmployees[i].status = newStatus;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Handle employee load failure
+      function handleLoadFailure(error) {
+        closeProcessingOverlay();
+        showMessage("Error loading employees: " + error.message, 'error');
+        
+        // If we have cached data, show it anyway
+        if (cachedEmployees) {
+          displayEmployeesWithStatus(cachedEmployees);
+        }
+      }
+      
+      // Select an employee
+function selectEmployee(employee) {
+  selectedEmployeeId = employee.employeeId;
+  
+  // Stop the refresh timer when leaving the selection screen
+  stopStatusRefreshTimer();
+  
+  // Show employee name in PIN section
+  document.getElementById('selectedEmployeeInfo').innerHTML = 
+    `<strong>${employee.firstName} ${employee.lastName}</strong><br>${employee.department}`;
+  // Show PIN section
+  document.getElementById('employeeSelectionSection').classList.add('hidden');
+  document.getElementById('pinSection').classList.remove('hidden');
+  // Focus on PIN input
+  document.getElementById('pin').focus();
+}
+
+      
+      // Go back to employee selection
+function showEmployeeSelection() {
+  document.getElementById('employeeSelectionSection').classList.remove('hidden');
+  document.getElementById('pinSection').classList.add('hidden');
+  document.getElementById('pin').value = '';
+  document.getElementById('loginMessage').innerText = '';
+  
+  // Refresh employee statuses immediately and restart timer
+  loadEmployeesWithStatus();
+  startStatusRefreshTimer();
+}
+
+      
+      // Verify PIN
+function verifyPin() {
+  const pinInput = document.getElementById('pin');
+  const pin = pinInput.value.trim();
+  
+  if (!pin) {
+    document.getElementById('loginMessage').innerText = 'Please enter your PIN';
+    return;
+  }
+  
+  showProcessingOverlay('Verifying PIN...');
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        // Store current employee info
+        currentEmployee = result;
+        
+        // Show actions section
+        document.getElementById('pinSection').classList.add('hidden');
+        document.getElementById('actionsSection').classList.remove('hidden');
+
+         // Show the fixed logout button
+         document.getElementById('fixedLogoutButton').classList.remove('hidden');
+        
+        // Set welcome message
+        document.getElementById('welcomeMessage').innerText = `Welcome, ${result.firstName}!`;
+        
+        // Clear PIN input
+        pinInput.value = '';
+        document.getElementById('loginMessage').innerText = '';
+        
+        // Get employee status and update UI
+        updateEmployeeStatus(result.employeeId);
+        
+        // Load employee time report
+        loadEmployeeTimeReport(result.employeeId);
+
+        // Check if email is missing and show prompt if needed
+        checkEmployeeEmail();
+        
+      } else {
+        closeProcessingOverlay();
+        document.getElementById('loginMessage').innerText = result.message || 'Invalid PIN';
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      document.getElementById('loginMessage').innerText = 'Error: ' + error.message;
+    })
+    .authenticateEmployee(selectedEmployeeId, pin);
+}
+      
+      // Update employee status display
+// Update employee status display
+function updateEmployeeStatus(employeeId) {
+  showProcessingOverlay('Getting Current Status...');
+  
+  google.script.run
+    .withSuccessHandler(function(statusResult) {
+      closeProcessingOverlay();
+      
+      const status = statusResult.status;
+      const statusText = document.getElementById('statusText');
+      const statusTimestamp = document.getElementById('statusTimestamp');
+      
+      statusText.innerText = status;
+      
+      if (status === "Not Clocked In" || status === "Error") {
+        statusTimestamp.innerText = '';
+        stopBreakTimer(); // Ensure timer is stopped
+      } else {
+        statusTimestamp.innerText = `Since: ${statusResult.time || 'Unknown time'}`;
+        
+        // Handle break timer based on status
+        if (status === "On Regular Break" || status === "On Lunch Break") {
+          // Use the server-provided break start time if available
+          let breakStartTime;
+          let timeLimit;
+          
+          if (statusResult.breakStartTime) {
+            // Use server-provided break start time
+            breakStartTime = new Date(statusResult.breakStartTime);
+            timeLimit = statusResult.breakTimeLimit || (status === "On Regular Break" ? 15 : 30);
+            console.log(`Using server break time: ${breakStartTime.toLocaleTimeString()}, limit: ${timeLimit} min`);
+          } else {
+            // Fallback to status time
+            breakStartTime = new Date(statusResult.time);
+            timeLimit = status === "On Regular Break" ? 15 : 30;
+            console.log(`Using fallback time: ${breakStartTime.toLocaleTimeString()}, limit: ${timeLimit} min`);
+          }
+          
+          // Start the break timer with the actual start time
+          startBreakTimer(status === "On Regular Break" ? 'regular' : 'lunch', breakStartTime, timeLimit);
+        } else {
+          stopBreakTimer(); // Not on break, stop timer
+        }
+      }
+      
+      // Update button states based on status
+      updateButtonStates(status, statusResult);
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      showMessage("Error getting status: " + error.message, 'error');
+    })
+    .getEmployeeStatus(employeeId);
+}
+      
+      // Update button states based on employee status
+      function updateButtonStates(status, statusResult = {}) {
+        // Get all buttons
+        const clockInBtn = document.getElementById('clockInBtn');
+        const clockOutBtn = document.getElementById('clockOutBtn');
+        const startRegularBreakBtn = document.getElementById('startRegularBreakBtn');
+        const endRegularBreakBtn = document.getElementById('endRegularBreakBtn');
+        const startLunchBtn = document.getElementById('startLunchBtn');
+        const endLunchBtn = document.getElementById('endLunchBtn');
+        
+        // Disable all buttons initially
+        clockInBtn.disabled = true;
+        clockOutBtn.disabled = true;
+        startRegularBreakBtn.disabled = true;
+        endRegularBreakBtn.disabled = true;
+        startLunchBtn.disabled = true;
+        endLunchBtn.disabled = true;
+        
+        // Enable appropriate buttons based on status
+        switch(status) {
+          case "Not Clocked In":
+          case "Clocked Out":
+            // Only clock in is available
+            clockInBtn.disabled = false;
+            break;
+          case "Clocked In":
+            // Can clock out or start breaks
+            clockOutBtn.disabled = false;
+            startRegularBreakBtn.disabled = false;
+            startLunchBtn.disabled = false;
+            break;
+          case "On Regular Break":
+            // Can only end regular break
+            endRegularBreakBtn.disabled = false;
+            break;
+          case "On Lunch Break":
+            // Can only end lunch break
+            endLunchBtn.disabled = false;
+            break;
+          default:
+            // Unknown status, enable only clock in/out
+            clockInBtn.disabled = false;
+            clockOutBtn.disabled = false;
+        }
+        // Update break indicators
+  const regularBreakIndicator = document.getElementById('regularBreakIndicator');
+  const lunchBreakIndicator = document.getElementById('lunchBreakIndicator');
+  
+  // Default values if not provided
+  const regularBreaksTaken = statusResult.regularBreaksTaken || 0;
+  const lunchBreakTaken = statusResult.lunchBreakTaken || false;
+  
+  // Update regular break indicator
+  const regularBreaksRemaining = 2 - regularBreaksTaken;
+  regularBreakIndicator.textContent = `Regular Breaks: ${regularBreaksRemaining}/2 remaining`;
+  
+  if (regularBreaksRemaining === 2) {
+    regularBreakIndicator.className = 'break-indicator break-available';
+  } else if (regularBreaksRemaining === 1) {
+    regularBreakIndicator.className = 'break-indicator break-partial';
+  } else {
+    regularBreakIndicator.className = 'break-indicator break-used';
+  }
+  
+  // Update lunch break indicator
+  if (lunchBreakTaken) {
+    lunchBreakIndicator.textContent = 'Lunch Break: Used';
+    lunchBreakIndicator.className = 'break-indicator break-used';
+  } else {
+    lunchBreakIndicator.textContent = 'Lunch Break: Available';
+    lunchBreakIndicator.className = 'break-indicator break-available';
+  }
+      }
+      
+      // Clock in function
+      function clockIn() {
+        if (!currentEmployee) return;
+        
+        showProcessingOverlay('Clocking in...');
+        
+        google.script.run
+          .withSuccessHandler(handleClockInSuccess)
+          .withFailureHandler(function(error) {
+            closeProcessingOverlay();
+            showMessage("Error: " + error.message, 'error');
+          })
+          .clockIn(currentEmployee.employeeId);
+      }
+            // Handle clock in success 
+            function handleClockInSuccess(result) {
+        if (result.success) {
+          // Update cached employee status
+          updateCachedEmployeeStatus(currentEmployee?.employeeId, "Clocked In");
+          
+          // Redirect to employee selection
+          resetToEmployeeSelection();
+          
+          // Show message with appropriate formatting
+          let message = "Successfully Clocked In";
+          
+          if (result.lateMinutes > 0) {
+            // Show warning with details for late clock-in
+            showMessage(message, 'warning', {
+              lateMinutes: result.lateMinutes,
+              payPeriodMissedMinutes: result.payPeriodMissedMinutes
+            });
+          } else {
+            // Standard success message
+            showMessage(message);
+          }
+        } else {
+          // Error message
+          showMessage(result.message || "Failed to clock in", 'error');
+        }
+      }
+      
+      // Clock out function
+      function clockOut() {
+        if (!currentEmployee) return;
+        
+        showProcessingOverlay('Clocking out...');
+        
+        google.script.run
+          .withSuccessHandler(handleClockOutSuccess)
+          .withFailureHandler(function(error) {
+            closeProcessingOverlay();
+            showMessage("Error: " + error.message, 'error');
+          })
+          .clockOut(currentEmployee.employeeId);
+      }
+      
+      // Handle clock out success
+      function handleClockOutSuccess(result) {
+        if (result.success) {
+          // Update cached employee status
+          updateCachedEmployeeStatus(currentEmployee?.employeeId, "Clocked Out");
+          
+          // Redirect to employee selection
+          resetToEmployeeSelection();
+          
+          // Show message with appropriate formatting
+          let message = "Successfully Clocked Out";
+          
+          if (result.earlyMinutes > 0) {
+            // Show warning with details for early clock-out
+            showMessage(message, 'warning', {
+              earlyMinutes: result.earlyMinutes,
+              payPeriodMissedMinutes: result.payPeriodMissedMinutes
+            });
+          } else {
+            // Standard success message
+            showMessage(message);
+          }
+        } else {
+          // Error message
+          showMessage(result.message || "Failed to clock out", 'error');
+        }
+      }
+      
+// Start break function
+function startBreak(breakType) {
+  if (!currentEmployee) return;
+  
+  const breakLabel = breakType === 'lunch' ? 'lunch' : 'regular';
+  showProcessingOverlay(`Starting ${breakLabel} break...`);
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        // Update cached employee status
+        const statusText = breakType === 'lunch' ? "On Lunch Break" : "On Regular Break";
+        updateCachedEmployeeStatus(currentEmployee?.employeeId, statusText);
+        
+        // Start the break timer before redirecting
+        startBreakTimer(breakType);
+        
+        // Redirect to employee selection
+        resetToEmployeeSelection();
+        
+        // Show message
+        showMessage(`${breakType.charAt(0).toUpperCase() + breakType.slice(1)} Break Started`);
+      } else {
+        // Error message
+        showMessage(result.message || "Failed to start break", 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      showMessage("Error: " + error.message, 'error');
+    })
+    .startBreak(currentEmployee.employeeId, breakType);
+}
+      
+      // End break function
+function endBreak(breakType) {
+  if (!currentEmployee) return;
+  
+  const breakLabel = breakType === 'lunch' ? 'lunch' : 'regular';
+  showProcessingOverlay(`Ending ${breakLabel} Break...`);
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      // Stop the break timer
+      stopBreakTimer();
+      
+      handleBreakEndSuccess(result);
+    })
+    .withFailureHandler(function(error) {
+      closeProcessingOverlay();
+      showMessage("Error: " + error.message, 'error');
+    })
+    .endBreak(currentEmployee.employeeId, breakType);
+}
+      // Handle break end success
+      function handleBreakEndSuccess(result) {
+        if (result.success) {
+          // Update cached employee status
+          updateCachedEmployeeStatus(currentEmployee?.employeeId, "Clocked In");
+          
+          // Redirect to employee selection
+          resetToEmployeeSelection();
+          
+          // Message with appropriate formatting
+          let message = "Break Ended Successfully";
+          
+          if (result.extendedMinutes > 0) {
+            // Show warning with details for extended break
+            showMessage(message, 'warning', {
+              extendedBreakMinutes: result.extendedMinutes,
+              payPeriodMissedMinutes: result.payPeriodMissedMinutes
+            });
+          } else {
+            // Standard success message
+            showMessage(message);
+          }
+        } else {
+          // Error message
+          showMessage(result.message || "Failed to end break", 'error');
+        }
+      }
+      
+      function logout() {
+  currentEmployee = null;
+  
+  stopBreakTimer(); // Stop timer on logout
+
+  // Hide the fixed logout button
+  document.getElementById('fixedLogoutButton').classList.add('hidden');
+  
+  document.getElementById('actionsSection').classList.add('hidden');
+  document.getElementById('employeeSelectionSection').classList.remove('hidden');
+  
+  // Refresh employee statuses and restart timer
+  loadEmployeesWithStatus();
+  startStatusRefreshTimer();
+}
+
+      
+      // Hide message area
+      function hideMessage() {
+        document.getElementById('messageArea').classList.add('hidden');
+      }
+      
+      // Initialize the app
+      window.onload = onLoad;
+
+// Start break timer when employee goes on break
+function startBreakTimer(breakType, startTime = null, timeLimit = null) {
+  // Clear any existing timer
+  stopBreakTimer();
+  
+  // Set the break time limit based on break type or use provided limit
+  breakTimeLimit = timeLimit || (breakType === 'lunch' ? 30 : 15); // minutes
+  
+  // Update timer label
+  document.getElementById('breakTimerLabel').innerText = 
+    breakType === 'lunch' ? `Lunch Break (${breakTimeLimit} min limit)` : `Regular Break (${breakTimeLimit} min limit)`;
+  
+  // Record the break start time - use provided time or current time
+  breakStartTime = startTime || new Date();
+  
+  // Show the timer card
+  document.getElementById('breakTimerCard').classList.remove('hidden');
+  
+  // Start the timer interval
+  breakTimerInterval = setInterval(updateBreakTimer, 1000);
+  
+  // Update immediately
+  updateBreakTimer();
+}
+
+// Update the break timer display
+function updateBreakTimer() {
+  if (!breakStartTime) return;
+  
+  // Calculate elapsed time
+  const now = new Date();
+  const elapsedMs = now - breakStartTime;
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+  const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
+  
+  // Format as MM:SS
+  const timeDisplay = `${elapsedMinutes.toString().padStart(2, '0')}:${elapsedSeconds.toString().padStart(2, '0')}`;
+  
+  // Update the display
+  const timerDisplay = document.getElementById('breakTimerDisplay');
+  timerDisplay.innerText = timeDisplay;
+  
+  // Remove all status classes first
+  timerDisplay.classList.remove('timer-exceeded', 'timer-warning');
+  
+  // Check if time limit has been exceeded
+  if (elapsedMinutes >= breakTimeLimit) {
+    timerDisplay.classList.add('timer-exceeded');
+  } 
+  // Check if within 3 minutes of the time limit
+  else if (elapsedMinutes >= breakTimeLimit - 3) {
+    timerDisplay.classList.add('timer-warning');
+  }
+}
+
+// Stop the break timer
+function stopBreakTimer() {
+  if (breakTimerInterval) {
+    clearInterval(breakTimerInterval);
+    breakTimerInterval = null;
+  }
+  
+  breakStartTime = null;
+  document.getElementById('breakTimerCard').classList.add('hidden');
+  
+  // Remove all timer status classes
+  const timerDisplay = document.getElementById('breakTimerDisplay');
+  timerDisplay.classList.remove('timer-exceeded', 'timer-warning');
+}
+
+// Load and display employee time report
+function loadEmployeeTimeReport(employeeId) {
+  console.log("Loading time report for employee ID:", employeeId);
+  
+  // Show loading indicator
+  document.getElementById('employee-time-report').style.display = 'block';
+  document.getElementById('report-loading').style.display = 'block';
+  document.getElementById('report-content').style.display = 'none';
+  
+  // Call server-side function to get time report data
+  google.script.run
+    .withSuccessHandler(function(response) {
+      console.log("Time report response:", response);
+      
+      // Hide loading indicator
+      document.getElementById('report-loading').style.display = 'none';
+      document.getElementById('report-content').style.display = 'block';
+      
+      if (!response || !response.success) {
+        // Show error message
+        document.getElementById('report-content').innerHTML = `
+          <div class="alert alert-warning">
+            ${response && response.message ? response.message : "No time data available for the current pay period."}
+          </div>
+        `;
+        return;
+      }
+      
+      // Display pay period dates
+      const startDate = new Date(response.payPeriod.startDate).toLocaleDateString();
+      const endDate = new Date(response.payPeriod.endDate).toLocaleDateString();
+      document.getElementById('pay-period-dates').textContent = `${startDate} to ${endDate}`;
+      
+      // Calculate net working hours total from individual logs
+      let totalNetWorkingHours = 0;
+      if (response.timeLogs && response.timeLogs.length > 0) {
+        response.timeLogs.forEach(function(log) {
+          // Check if netWorkingHours exists, otherwise fall back to hoursWorked
+          const hours = (log.netWorkingHours !== undefined) ? log.netWorkingHours : log.hoursWorked;
+          totalNetWorkingHours += Number(hours || 0);
+        });
+      }
+      
+      // Display totals - use calculated net working hours for total
+      document.getElementById('total-hours-worked').textContent = totalNetWorkingHours.toFixed(2);
+      document.getElementById('regular-break-time').textContent = response.totals.regularBreakTime.toFixed(2);
+      document.getElementById('lunch-break-time').textContent = response.totals.lunchBreakTime.toFixed(2);
+      document.getElementById('total-missed-minutes').textContent = response.totals.missedMinutes.toFixed(0);
+      
+      // Display time logs
+      const timeLogsBody = document.getElementById('time-logs-body');
+      timeLogsBody.innerHTML = '';
+      
+      if (response.timeLogs.length === 0) {
+        timeLogsBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center">No time logs found for the current pay period</td>
+          </tr>
+        `;
+      } else {
+        // Process each time log
+        response.timeLogs.forEach(function(log) {
+          const row = document.createElement('tr');
+          
+          // IMPROVED: Handle date cell - use the date field directly if available
+          const dateCell = document.createElement('td');
+          if (log.date) {
+            // Use the formatted date field that's already properly processed
+            dateCell.textContent = log.date;
+          } else if (log.clockIn && typeof log.clockIn === 'string') {
+            // If no date field, try to parse from clockIn
+            if (log.clockIn.includes(' ')) {
+              // Format: "MM/dd/yyyy HH:mm:ss" - get MM/dd/yyyy part
+              dateCell.textContent = log.clockIn.split(' ')[0];
+            } else if (log.clockIn.includes('T')) {
+              // Format: ISO string "yyyy-MM-ddTHH:mm:ss" - get yyyy-MM-dd part
+              dateCell.textContent = log.clockIn.split('T')[0];
+            } else {
+              dateCell.textContent = log.clockIn;
+            }
+          } else {
+            dateCell.textContent = '-';
+          }
+          row.appendChild(dateCell);
+          
+          // IMPROVED: Handle clock-in cell - better parsing
+          const clockInCell = document.createElement('td');
+          if (log.clockIn) {
+            if (typeof log.clockIn === 'string') {
+              if (log.clockIn.includes(' ')) {
+                // Format: "MM/dd/yyyy HH:mm:ss" - get HH:mm:ss part
+                clockInCell.textContent = log.clockIn.split(' ')[1] || log.clockIn;
+              } else if (log.clockIn.includes('T')) {
+                // Format: ISO string "yyyy-MM-ddTHH:mm:ss" - get HH:mm:ss part
+                const timePart = log.clockIn.split('T')[1];
+                clockInCell.textContent = timePart ? timePart.substring(0, 8) : log.clockIn;
+              } else {
+                // Assume it's just the time
+                clockInCell.textContent = log.clockIn;
+              }
+            } else {
+              clockInCell.textContent = log.clockIn.toString();
+            }
+          } else {
+            clockInCell.textContent = '-';
+          }
+          row.appendChild(clockInCell);
+          
+          // IMPROVED: Handle clock-out cell - better parsing
+          const clockOutCell = document.createElement('td');
+          if (log.clockOut) {
+            if (typeof log.clockOut === 'string') {
+              if (log.clockOut.includes(' ')) {
+                // Format: "MM/dd/yyyy HH:mm:ss" - get HH:mm:ss part
+                clockOutCell.textContent = log.clockOut.split(' ')[1] || log.clockOut;
+              } else if (log.clockOut.includes('T')) {
+                // Format: ISO string "yyyy-MM-ddTHH:mm:ss" - get HH:mm:ss part
+                const timePart = log.clockOut.split('T')[1];
+                clockOutCell.textContent = timePart ? timePart.substring(0, 8) : log.clockOut;
+              } else {
+                // Assume it's just the time
+                clockOutCell.textContent = log.clockOut;
+              }
+            } else {
+              clockOutCell.textContent = log.clockOut.toString();
+            }
+          } else {
+            clockOutCell.textContent = '-';
+          }
+          row.appendChild(clockOutCell);
+          
+          // Use netWorkingHours instead of hoursWorked
+          const hoursCell = document.createElement('td');
+          const hours = (log.netWorkingHours !== undefined) ? log.netWorkingHours : log.hoursWorked;
+          hoursCell.textContent = (hours || 0).toFixed(2);
+          row.appendChild(hoursCell);
+          
+          // Break time cell
+          const breaksCell = document.createElement('td');
+          breaksCell.textContent = ((log.regularBreakTime || 0) + (log.lunchBreakTime || 0)).toFixed(2);
+          row.appendChild(breaksCell);
+          
+          // Missed minutes cell
+          const missedCell = document.createElement('td');
+          missedCell.textContent = (log.missedMinutes || 0).toFixed(0);
+          row.appendChild(missedCell);
+          
+          // Add the completed row to the table
+          timeLogsBody.appendChild(row);
+        });
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error loading time report:", error);
+      
+      // Hide loading indicator and show error
+      document.getElementById('report-loading').style.display = 'none';
+      document.getElementById('report-content').innerHTML = `
+        <div class="alert alert-danger">
+          Error loading time report: ${error}
+        </div>
+      `;
+    })
+    .getEmployeeTimeReport(employeeId);
+}
+
+
+// Debugging feature
+function fetchEmployeeTimeReport(employeeId) {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      console.log("Received time report:", result);
+      // Process the result
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error fetching time report:", error);
+    })
+    .getEmployeeTimeReport(employeeId);
+}
+
+
+
+    </script>
+  </body>
+</html>
