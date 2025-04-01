@@ -1911,9 +1911,14 @@ function loadEmployeeTimeReport(employeeId) {
         return;
       }
       
-      // Display pay period dates
+      // Display pay period dates with adjusted end date (one day before)
       const startDate = new Date(response.payPeriod.startDate).toLocaleDateString();
-      const endDate = new Date(response.payPeriod.endDate).toLocaleDateString();
+      
+      // Create a new date object for the end date and subtract one day
+      const endDateObj = new Date(response.payPeriod.endDate);
+      endDateObj.setDate(endDateObj.getDate() - 1);
+      const endDate = endDateObj.toLocaleDateString();
+      
       document.getElementById('pay-period-dates').textContent = `${startDate} to ${endDate}`;
       
       // Calculate net working hours total from individual logs
@@ -2048,6 +2053,7 @@ function loadEmployeeTimeReport(employeeId) {
     })
     .getEmployeeTimeReport(employeeId);
 }
+
 
 
 // Debugging feature
@@ -2378,12 +2384,26 @@ function showPayPeriodSelector() {
       payPeriods.forEach(period => {
         const option = document.createElement('option');
         option.value = period.id;
-        option.textContent = `${period.name} (${period.startDate} - ${period.endDate})`;
+        
+        // Keep original start date
+        const startDate = period.startDate;
+        
+        // Get the end date and subtract one day for display purposes
+        const endDateObj = new Date(period.endDate);
+        endDateObj.setDate(endDateObj.getDate() - 1);
+        
+        // Format the adjusted date as YYYY-MM-DD to match your current format
+        const adjustedEndDate = endDateObj.toISOString().split('T')[0];
+        
+        // Set the display text with the adjusted end date
+        option.textContent = `${startDate} - ${adjustedEndDate}`;
+        
         select.appendChild(option);
       });
     })
     .getPayPeriods();
 }
+
 
 function showCustomDateRange() {
   document.getElementById('payPeriodSelector').style.display = 'none';
@@ -2401,9 +2421,44 @@ function loadSelectedPayPeriod() {
   google.script.run
     .withSuccessHandler(function(result) {
       if (result.success) {
-        // Update pay period dates
+        // Get the end date and adjust it by subtracting one day for display only
+        let displayEndDate = result.payPeriod.endDate;
+        
+        try {
+          // Parse the end date string to a Date object
+          // Assuming format is either YYYY-MM-DD or MM/DD/YYYY
+          let endDateObj;
+          if (result.payPeriod.endDate.includes('-')) {
+            // Format is YYYY-MM-DD
+            endDateObj = new Date(result.payPeriod.endDate + 'T00:00:00');
+          } else if (result.payPeriod.endDate.includes('/')) {
+            // Format is MM/DD/YYYY
+            const [month, day, year] = result.payPeriod.endDate.split('/').map(num => parseInt(num, 10));
+            endDateObj = new Date(year, month - 1, day);
+          }
+          
+          // Subtract one day
+          endDateObj.setDate(endDateObj.getDate() - 1);
+          
+          // Format back to the original format
+          if (result.payPeriod.endDate.includes('-')) {
+            // Format as YYYY-MM-DD
+            displayEndDate = endDateObj.toISOString().split('T')[0];
+          } else if (result.payPeriod.endDate.includes('/')) {
+            // Format as MM/DD/YYYY
+            const month = (endDateObj.getMonth() + 1).toString().padStart(2, '0');
+            const day = endDateObj.getDate().toString().padStart(2, '0');
+            const year = endDateObj.getFullYear();
+            displayEndDate = `${month}/${day}/${year}`;
+          }
+        } catch (e) {
+          console.error("Error adjusting end date:", e);
+          // Use original end date if there was an error
+        }
+        
+        // Update pay period dates with adjusted end date
         document.getElementById('pay-period-dates').textContent = 
-          `${result.payPeriod.startDate} to ${result.payPeriod.endDate}`;
+          `${result.payPeriod.startDate} to ${displayEndDate}`;
         
         // Update totals
         document.getElementById('total-hours-worked').textContent = 
@@ -2453,6 +2508,7 @@ function loadSelectedPayPeriod() {
     })
     .getEmployeeTimeReportByPayPeriod(currentEmployee.employeeId, periodId);
 }
+
 
 
 function loadCustomDateRange() {

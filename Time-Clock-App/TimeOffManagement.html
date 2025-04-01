@@ -364,6 +364,13 @@
       <!-- Main Content -->
       <div class="col-md-10 main-content">
         <div id="alerts-container" class="container mt-3"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center;">
+            <div style="background:white; padding:20px; border-radius:5px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+              <p id="loadingMessage">Loading...</p>
+            </div>
+          </div>
         
         <!-- PTO Requests Tab -->
         <div id="pto-requests-tab" class="tab-content active">
@@ -2196,6 +2203,75 @@
       console.error(error);
       showAlert("An error occurred: " + error.message, 'danger');
     }
+
+
+
+
+
+
+
+
+    // Call this when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Show loading indicator
+  document.getElementById('loadingMessage').textContent = "Initializing PTO system...";
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  
+  // Initialize PTO system first
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        console.log("PTO system initialized successfully");
+        // Now load the dashboard data
+        loadDashboardData();
+      } else {
+        showError("Failed to initialize PTO system: " + result.message);
+        hideLoading();
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error initializing PTO system:", error);
+      showError("System initialization failed: " + error);
+      hideLoading();
+    })
+    .initializePTOSystem();
+});
+
+// Function to load all dashboard data
+function loadDashboardData() {
+  console.log("Loading dashboard data...");
+  
+  // Reload all data for the dashboard
+  loadEmployees();
+  loadPTORequests();
+  loadPTOBalances();
+  
+  // Hide loading when complete
+  hideLoading();
+}
+
+// Helper functions for loading UI
+function showError(message) {
+  const errorElement = document.getElementById('errorMessage') || document.createElement('div');
+  errorElement.id = 'errorMessage';
+  errorElement.style.color = 'red';
+  errorElement.style.padding = '10px';
+  errorElement.style.margin = '10px 0';
+  errorElement.textContent = message;
+  
+  if (!document.getElementById('errorMessage')) {
+    document.body.insertBefore(errorElement, document.body.firstChild);
+  }
+}
+
+function hideLoading() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'none';
+  }
+}
+
+
   </script>
 </body>
 </html>

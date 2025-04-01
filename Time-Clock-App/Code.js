@@ -22,6 +22,12 @@ function doGet(e) {
       .setTitle('Employee Time Tracking')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
+  }else if (page === 'timeoffmanagement') {
+    return HtmlService
+      .createHtmlOutputFromFile('TimeOffManagement')
+      .setTitle('Employee Time Tracking')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
   } else {
     return HtmlService
       .createHtmlOutputFromFile('Kiosk')
@@ -2812,15 +2818,9 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = new Date(`${endDate}T${endTime}`);
     
-    // Create date-only objects for simpler date comparison
-    const startDateOnly = new Date(startDate);
-    startDateOnly.setHours(0, 0, 0, 0);
-    const endDateOnly = new Date(endDate);
-    endDateOnly.setHours(23, 59, 59, 999);
-    
     Logger.log("Start datetime: " + startDateTime);
     Logger.log("End datetime: " + endDateTime);
-    Logger.log("Date range: " + startDateOnly.toISOString() + " to " + endDateOnly.toISOString());
+    Logger.log("Date range: " + startDateTime.toISOString() + " to " + endDateTime.toISOString());
     
     // Get time logs data
     const timeLogsSheet = ss.getSheetByName('Time Logs');
@@ -2869,11 +2869,20 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
           continue; // Skip if no date
         }
         
-        // Check if the log date falls within the date range (ignoring time)
-        const logDateOnly = new Date(logDate);
-        logDateOnly.setHours(0, 0, 0, 0);
+        // Get clock in time if available
+        let logDateTime = logDate;
+        if (row[3] && row[3] instanceof Date) {
+          // If we have a clock-in time, use it to create a full datetime
+          const hours = row[3].getHours();
+          const minutes = row[3].getMinutes();
+          const seconds = row[3].getSeconds();
+          
+          logDateTime = new Date(logDate);
+          logDateTime.setHours(hours, minutes, seconds);
+        }
         
-        if (logDateOnly >= startDateOnly && logDateOnly <= endDateOnly) {
+        // Check if the log date falls within the date range (using actual datetime)
+        if (logDateTime >= startDateTime && logDateTime <= endDateTime) {
           // Initialize employee data if not exists
           if (!employeeTotals[employeeId]) {
             employeeTotals[employeeId] = {
@@ -2946,6 +2955,7 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
     throw new Error('Failed to generate report: ' + error.toString());
   }
 }
+
 
 // Generate PDF report
 function generateReportPdf(reportData, startDate, endDate) {
