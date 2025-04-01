@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -617,6 +618,27 @@
 .secondary-button:hover {
   background-color: #d0d0d0;
 }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fa-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Ensure the button maintains its size when showing loading state */
+#request-pto-btn {
+  min-width: 200px;
+  position: relative;
+}
+
+/* Style for disabled button that still looks clickable */
+#request-pto-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
 
     </style>
   </head>
@@ -636,6 +658,7 @@
     </div>
     
     <div class="container">
+
       <h1>Employee Time Tracker</h1>
       
       <div id="clock"></div>
@@ -712,7 +735,37 @@
         </div>
         <!-- Employee Time Report Section -->
 <div id="employee-time-report" class="card mt-4" style="display: none;">
-  <h3>My Time Report - Current Pay Period</h3>
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3>My Time Report</h3>
+      <div class="btn-group">
+        <button class="btn btn-outline-primary" onclick="showCurrentPayPeriod()">Current Pay Period</button>
+        <button class="btn btn-outline-primary" onclick="showPayPeriodSelector()">Select Pay Period</button>
+        <button class="btn btn-outline-primary" onclick="showCustomDateRange()">Custom Date Range</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add these new sections -->
+  <div id="payPeriodSelector" class="mb-3" style="display: none;">
+    <select id="payPeriodSelect" class="form-select" onchange="loadSelectedPayPeriod()">
+      <option value="">Select Pay Period</option>
+    </select>
+  </div>
+  
+  <div id="customDateRange" class="mb-3" style="display: none;">
+    <div class="row">
+      <div class="col">
+        <input type="date" id="customStartDate" class="form-control" placeholder="Start Date">
+      </div>
+      <div class="col">
+        <input type="date" id="customEndDate" class="form-control" placeholder="End Date">
+      </div>
+      <div class="col">
+        <button class="btn btn-primary" onclick="loadCustomDateRange()">Load Report</button>
+      </div>
+    </div>
+  </div>
   <div id="report-loading" class="text-center py-3" style="display: none;">
     <div class="spinner"></div>
     <p>Loading your time report...</p>
@@ -774,6 +827,16 @@
   </div>
 </div>
 
+
+
+
+
+
+
+<button id="request-pto-btn" class="btn btn-info w-100 mb-2" onclick="showPTORequestForm()">
+  <i class="fas fa-calendar-alt me-2"></i>Request Time Off
+</button>
+
       </div>
 
 
@@ -785,6 +848,8 @@
 
     </div>
     
+    <div id="alertContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
 <!-- Email Collection Overlay -->
 <div id="emailCollectionOverlay" class="overlay hidden">
   <div class="modal-content">
@@ -794,6 +859,75 @@
     <p id="emailMessage" class="error-message"></p>
     <div class="button-container">
       <button id="saveEmailBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="ptoRequestModal" tabindex="-1" aria-labelledby="ptoRequestModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ptoRequestModalLabel">Request Time Off</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="ptoRequestForm">
+          <div class="mb-3">
+            <label for="requestType" class="form-label">Request Type</label>
+            <select class="form-select" id="requestType" required>
+              <option value="">Select Type</option>
+              <option value="Vacation">Vacation</option>
+              <option value="Sick">Sick</option>
+              <option value="Personal">Personal</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="startDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="totalHours" class="form-label">Total Hours</label>
+            <input type="number" class="form-control" id="totalHours" min="1" max="80" required>
+            <small class="text-muted">Enter the total hours requested for this period</small>
+          </div>
+          <div class="mb-3">
+            <label for="notes" class="form-label">Notes (Optional)</label>
+            <textarea class="form-control" id="notes" rows="3"></textarea>
+          </div>
+          <div class="alert alert-info">
+            <div>
+              <span>Your current PTO balance: </span>
+              <span id="currentPTOBalance">Loading...</span> hours
+            </div>
+            <div>
+              <span>Balance after Pending Requests: </span>
+              <span id="balanceAfterPending">Loading...</span> hours
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitPTORequest">Submit Request</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1105,6 +1239,31 @@ function onLoad() {
       verifyPin();
     }
   });
+  // Set min date to today for date inputs
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').min = today;
+  document.getElementById('endDate').min = today;
+  
+  // Add event listeners for date validation
+  document.getElementById('endDate').addEventListener('change', validateDates);
+  document.getElementById('startDate').addEventListener('change', function() {
+    document.getElementById('endDate').min = this.value;
+    validateDates();
+  });
+});
+const ptoModal = document.getElementById('ptoRequestModal');
+  if (ptoModal) {
+    ptoModal.addEventListener('hidden.bs.modal', function() {
+      // Clean up any remaining backdrop
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    });
+  }
+
 }
 
 
@@ -1906,6 +2065,483 @@ function fetchEmployeeTimeReport(employeeId) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function showPTORequestForm() {
+  // Make sure we have the current employee
+  if (!currentEmployee) {
+    showMessage("Error: Employee information not available", 'error');
+    return;
+  }
+  
+  // Show loading state on button
+  const ptoButton = document.getElementById('request-pto-btn');
+  const originalButtonText = ptoButton.innerHTML;
+  ptoButton.disabled = true;
+  ptoButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading PTO data...';
+  
+  // Get current employee's PTO balance with pending requests
+  google.script.run
+    .withSuccessHandler(function(ptoData) {
+      // Reset button state
+      ptoButton.disabled = false;
+      ptoButton.innerHTML = originalButtonText;
+      
+      if (ptoData.success) {
+        document.getElementById('currentPTOBalance').textContent = ptoData.balance;
+        
+        // Add the balance after pending requests
+        const balanceAfterPendingElement = document.getElementById('balanceAfterPending');
+        if (balanceAfterPendingElement) {
+          balanceAfterPendingElement.textContent = ptoData.balanceAfterPending;
+        }
+      } else {
+        document.getElementById('currentPTOBalance').textContent = "Error";
+        console.error(ptoData.message);
+      }
+      
+      try {
+        // Try to show the modal with Bootstrap
+        const ptoModal = new bootstrap.Modal(document.getElementById('ptoRequestModal'));
+        ptoModal.show();
+      } catch (error) {
+        console.error("Error showing modal:", error);
+        // Fallback: show the modal using display property
+        document.getElementById('ptoRequestModal').style.display = 'block';
+      }
+    })
+    .withFailureHandler(function(error) {
+      // Reset button state on error too
+      ptoButton.disabled = false;
+      ptoButton.innerHTML = originalButtonText;
+      
+      document.getElementById('currentPTOBalance').textContent = "Error";
+      console.error("Failed to get PTO balance:", error);
+      
+      // Show error message
+      showMessage("Error loading PTO data: " + error, 'error');
+    })
+    .getEmployeePTOBalanceWithPending(currentEmployee.employeeId);
+}
+
+
+
+
+
+
+// Set min date to today for date inputs
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').min = today;
+  document.getElementById('endDate').min = today;
+  
+  // Add event listeners for date validation
+  document.getElementById('endDate').addEventListener('change', validateDates);
+  document.getElementById('startDate').addEventListener('change', function() {
+    document.getElementById('endDate').min = this.value;
+    validateDates();
+  });
+  
+  // Submit handler
+  document.getElementById('submitPTORequest').addEventListener('click', submitPTORequest);
+});
+
+function validateDates() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+    alert('End date cannot be before start date');
+    document.getElementById('endDate').value = startDate;
+  }
+}
+
+function submitPTORequest() {
+  // Make sure we have the current employee
+  if (!currentEmployee) {
+    alert('Error: Employee information not available');
+    return;
+  }
+  
+  // Get form values
+  const requestType = document.getElementById('requestType').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  const totalHours = document.getElementById('totalHours').value;
+  const notes = document.getElementById('notes').value;
+  
+  // Validate form
+  if (!requestType || !startDate || !endDate || !totalHours) {
+    alert('Please fill out all required fields');
+    return;
+  }
+  
+  // Show loading indicator
+  document.getElementById('submitPTORequest').disabled = true;
+  document.getElementById('submitPTORequest').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+  
+  // Create request object
+  const ptoRequest = {
+    employeeId: currentEmployee.employeeId,
+    requestType: requestType,
+    startDate: startDate,
+    endDate: endDate,
+    totalHours: totalHours,
+    notes: notes
+  };
+  
+  // Submit to server
+  google.script.run
+    .withSuccessHandler(function(response) {
+      // Reset button
+      document.getElementById('submitPTORequest').disabled = false;
+      document.getElementById('submitPTORequest').textContent = 'Submit Request';
+      
+      if (response.success) {
+        try {
+          // Properly close the modal AND remove backdrop
+          const modalElement = document.getElementById('ptoRequestModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalElement);
+          
+          if (modalInstance) {
+            modalInstance.hide();
+          } else {
+            // Fallback method if getInstance doesn't work
+            jQuery(modalElement).modal('hide');
+          }
+          
+          // Additional cleanup to ensure backdrop is removed
+          setTimeout(function() {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+              backdrop.remove();
+            }
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+          }, 200);
+        } catch (e) {
+          console.error("Error closing modal:", e);
+          // Manual cleanup as last resort
+          document.getElementById('ptoRequestModal').style.display = 'none';
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) backdrop.remove();
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+        }
+        
+        // Reset form
+        document.getElementById('ptoRequestForm').reset();
+        
+        // Show success message using the existing message system
+        showMessage("Time off request submitted successfully!", 'success');
+      } else {
+        // Show error message
+        showMessage(response.message || "Error submitting request", 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      // Show error
+      document.getElementById('submitPTORequest').disabled = false;
+      document.getElementById('submitPTORequest').textContent = 'Submit Request';
+      showMessage("Error submitting request: " + error, 'error');
+    })
+    .submitPTORequest(ptoRequest);
+}
+
+
+
+
+// Helper function to show alerts
+function showAlert(type, message) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.role = 'alert';
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+  
+  // Add to page
+  document.getElementById('alertContainer').appendChild(alertDiv);
+  
+  // Auto dismiss after 5 seconds
+  setTimeout(() => {
+    alertDiv.classList.remove('show');
+    setTimeout(() => alertDiv.remove(), 150);
+  }, 5000);
+}
+
+// Make sure you have an alert container in your HTML
+if (!document.getElementById('alertContainer')) {
+  const alertContainer = document.createElement('div');
+  alertContainer.id = 'alertContainer';
+  alertContainer.className = 'position-fixed top-0 end-0 p-3';
+  alertContainer.style.zIndex = '1050';
+  document.body.appendChild(alertContainer);
+}
+
+function validateDates() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+    alert('End date cannot be before start date');
+    document.getElementById('endDate').value = startDate;
+  }
+}
+
+// Helper function to properly close Bootstrap modals
+function closeBootstrapModal(modalId) {
+  try {
+    const modalElement = document.getElementById(modalId);
+    
+    // Try using Bootstrap's API
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+      modalInstance.hide();
+    } else if (window.jQuery) {
+      // Try jQuery if available
+      jQuery(modalElement).modal('hide');
+    } else {
+      // Manual approach
+      modalElement.style.display = 'none';
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    
+    // Additional cleanup after a short delay
+    setTimeout(function() {
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 200);
+  } catch (e) {
+    console.error("Error closing modal:", e);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Add these functions to your existing script section
+function showCurrentPayPeriod() {
+  document.getElementById('payPeriodSelector').style.display = 'none';
+  document.getElementById('customDateRange').style.display = 'none';
+  loadEmployeeTimeReport(currentEmployee.employeeId);
+}
+
+function showPayPeriodSelector() {
+  document.getElementById('payPeriodSelector').style.display = 'block';
+  document.getElementById('customDateRange').style.display = 'none';
+  
+  // Load pay periods into selector
+  google.script.run
+    .withSuccessHandler(function(payPeriods) {
+      const select = document.getElementById('payPeriodSelect');
+      select.innerHTML = '<option value="">Select Pay Period</option>';
+      
+      payPeriods.forEach(period => {
+        const option = document.createElement('option');
+        option.value = period.id;
+        option.textContent = `${period.name} (${period.startDate} - ${period.endDate})`;
+        select.appendChild(option);
+      });
+    })
+    .getPayPeriods();
+}
+
+function showCustomDateRange() {
+  document.getElementById('payPeriodSelector').style.display = 'none';
+  document.getElementById('customDateRange').style.display = 'block';
+}
+
+function loadSelectedPayPeriod() {
+  const periodId = document.getElementById('payPeriodSelect').value;
+  if (!periodId) return;
+  
+  // Show loading state
+  document.getElementById('report-loading').style.display = 'block';
+  document.getElementById('report-content').style.display = 'none';
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        // Update pay period dates
+        document.getElementById('pay-period-dates').textContent = 
+          `${result.payPeriod.startDate} to ${result.payPeriod.endDate}`;
+        
+        // Update totals
+        document.getElementById('total-hours-worked').textContent = 
+          result.totals.hoursWorked.toFixed(2);
+        document.getElementById('regular-break-time').textContent = 
+          result.totals.regularBreakTime.toFixed(2);
+        document.getElementById('lunch-break-time').textContent = 
+          result.totals.lunchBreakTime.toFixed(2);
+        document.getElementById('total-missed-minutes').textContent = 
+          result.totals.missedMinutes.toFixed(0);
+        
+        // Update time logs table
+        const timeLogsBody = document.getElementById('time-logs-body');
+        timeLogsBody.innerHTML = '';
+        
+        if (!result.timeLogs || result.timeLogs.length === 0) {
+          timeLogsBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center">No time logs found for the selected pay period</td>
+            </tr>
+          `;
+        } else {
+          result.timeLogs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${log.date}</td>
+              <td>${log.clockIn || '-'}</td>
+              <td>${log.clockOut || '-'}</td>
+              <td>${log.netWorkingHours.toFixed(2)}</td>
+              <td>${(log.regularBreakTime + log.lunchBreakTime).toFixed(2)}</td>
+              <td>${log.missedMinutes}</td>
+            `;
+            timeLogsBody.appendChild(row);
+          });
+        }
+        
+        // Hide loading, show content
+        document.getElementById('report-loading').style.display = 'none';
+        document.getElementById('report-content').style.display = 'block';
+      } else {
+        showMessage(result.message || "Failed to load time report", 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById('report-loading').style.display = 'none';
+      showMessage("Error: " + error.toString(), 'error');
+    })
+    .getEmployeeTimeReportByPayPeriod(currentEmployee.employeeId, periodId);
+}
+
+
+function loadCustomDateRange() {
+  const startDate = document.getElementById('customStartDate').value;
+  const endDate = document.getElementById('customEndDate').value;
+  
+  if (!startDate || !endDate) {
+    showMessage("Please select both start and end dates", 'warning');
+    return;
+  }
+  
+  // Show loading state
+  document.getElementById('report-loading').style.display = 'block';
+  document.getElementById('report-content').style.display = 'none';
+  
+  google.script.run
+    .withSuccessHandler(updateTimeReportDisplay)
+    .withFailureHandler(function(error) {
+      document.getElementById('report-loading').style.display = 'none';
+      showMessage("Error: " + error.toString(), 'error');
+    })
+    .getEmployeeTimeReportCustom(currentEmployee.employeeId, startDate, endDate);
+}
+
+function updateTimeReportDisplay(result) {
+  // Hide loading indicator
+  document.getElementById('report-loading').style.display = 'none';
+  document.getElementById('report-content').style.display = 'block';
+  
+  if (!result || !result.success) {
+    // Show error message
+    document.getElementById('report-content').innerHTML = `
+      <div class="alert alert-warning">
+        ${result && result.message ? result.message : "No time data available for the selected period."}
+      </div>
+    `;
+    return;
+  }
+  
+  // Display date range
+  let dateRange;
+  if (result.payPeriod) {
+    dateRange = `${result.payPeriod.startDate} to ${result.payPeriod.endDate}`;
+  } else if (result.dateRange) {
+    dateRange = `${result.dateRange.startDate} to ${result.dateRange.endDate}`;
+  }
+  document.getElementById('pay-period-dates').textContent = dateRange;
+  
+  // Display totals
+  document.getElementById('total-hours-worked').textContent = result.totals.hoursWorked.toFixed(2);
+  document.getElementById('regular-break-time').textContent = result.totals.regularBreakTime.toFixed(2);
+  document.getElementById('lunch-break-time').textContent = result.totals.lunchBreakTime.toFixed(2);
+  document.getElementById('total-missed-minutes').textContent = result.totals.missedMinutes.toFixed(0);
+  
+  // Display time logs
+  const timeLogsBody = document.getElementById('time-logs-body');
+  timeLogsBody.innerHTML = '';
+  
+  if (!result.timeLogs || result.timeLogs.length === 0) {
+    timeLogsBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center">No time logs found for the selected period</td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Sort time logs by date (newest first)
+  result.timeLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  result.timeLogs.forEach(log => {
+    const row = document.createElement('tr');
+    
+    // Add cells
+    row.innerHTML = `
+      <td>${log.date}</td>
+      <td>${log.clockIn || '-'}</td>
+      <td>${log.clockOut || '-'}</td>
+      <td>${(log.netWorkingHours || log.hoursWorked || 0).toFixed(2)}</td>
+      <td>${((log.regularBreakTime || 0) + (log.lunchBreakTime || 0)).toFixed(2)}</td>
+      <td>${(log.missedMinutes || 0).toFixed(0)}</td>
+    `;
+    
+    timeLogsBody.appendChild(row);
+  });
+}
+
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </body>
 </html>

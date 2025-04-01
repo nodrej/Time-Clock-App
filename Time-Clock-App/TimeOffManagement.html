@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTO Management Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Calendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  
+  <!-- Date picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <style>
+    /* Modern Dashboard Style */
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f7fafc;
+      color: #2d3748;
+      line-height: 1.6;
+    }
+
+    /* Sidebar with gradient */
+    .sidebar {
+      height: 100vh;
+      background: linear-gradient(180deg, #4338ca 0%, #3b82f6 100%);
+      color: white;
+      padding-top: 25px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 20;
+    }
+
+    .sidebar-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 5px 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-item i {
+      margin-right: 10px;
+      font-size: 1.1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-item:hover {
+      background-color: rgba(255,255,255,0.15);
+      transform: translateX(5px);
+    }
+
+    .sidebar-item.active {
+      background-color: rgba(255,255,255,0.25);
+      transform: translateX(5px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Main content area */
+    .main-content {
+      padding: 30px;
+      transition: all 0.3s;
+    }
+
+    /* Page headings */
+    h2 {
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #1e293b;
+    }
+
+    /* Card design */
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+      overflow: hidden;
+      margin-bottom: 25px;
+      background-color: #ffffff;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      transform: translateY(-3px);
+    }
+
+    .card-header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 1.1rem;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .card-title {
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    /* Tables with modern styling */
+    .table-container {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px #e2e8f0;
+      max-height: 550px;
+      overflow-y: auto;
+      background-color: #ffffff;
+    }
+
+    .table {
+      margin-bottom: 0;
+    }
+
+    .table th {
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table td {
+      padding: 14px 16px;
+      vertical-align: middle;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table tbody tr {
+      transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f1f5f9;
+      transform: scale(1.01);
+    }
+
+    /* Button styles */
+    .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 10px 18px;
+      transition: all 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn i {
+      margin-right: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+      border: none;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border: none;
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      border: none;
+      color: white;
+    }
+
+    /* Form controls */
+    .form-control, .form-select {
+      border-radius: 8px;
+      padding: 12px 16px;
+      border: 1px solid #cbd5e1;
+      transition: all 0.3s;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      background-color: #ffffff;
+    }
+
+    /* Status badges */
+    .badge {
+      padding: 6px 10px;
+      font-weight: 500;
+      border-radius: 6px;
+    }
+
+    .badge-pending {
+      background-color: #f59e0b;
+      color: white;
+    }
+
+    .badge-approved {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .badge-denied {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    /* Calendar styling */
+    .calendar-container {
+      height: 600px;
+      margin-bottom: 20px;
+    }
+
+    .fc-event {
+      cursor: pointer;
+    }
+
+    .fc-event.approved {
+      background-color: #10b981;
+    }
+
+    .fc-event.pending {
+      background-color: #f59e0b;
+    }
+
+    .fc-event.denied {
+      background-color: #ef4444;
+    }
+
+    /* Tab content containers */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Modal styling */
+    .modal-content {
+      border: none;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+      background-color: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* Stats cards */
+    .stats-card {
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .stats-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 8px;
+    }
+
+    .stats-label {
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-2 sidebar">
+        <div class="sidebar-item active" data-tab="pto-requests">
+          <i class="fas fa-calendar-check me-2"></i> PTO Requests
+        </div>
+        <div class="sidebar-item" data-tab="pto-balances">
+          <i class="fas fa-wallet me-2"></i> PTO Balances
+        </div>
+        <div class="sidebar-item" data-tab="accrual-settings">
+          <i class="fas fa-cogs me-2"></i> Accrual Settings
+        </div>
+        <div class="sidebar-item" data-tab="pto-calendar">
+          <i class="fas fa-calendar-alt me-2"></i> Calendar View
+        </div>
+        <div class="sidebar-item" data-tab="pto-reports">
+          <i class="fas fa-chart-bar me-2"></i> PTO Reports
+        </div>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="col-md-10 main-content">
+        <div id="alerts-container" class="container mt-3"></div>
+        
+        <!-- PTO Requests Tab -->
+        <div id="pto-requests-tab" class="tab-content active">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>PTO Request Management</h2>
+            <div>
+              <button id="refresh-pto-requests" class="btn btn-secondary me-2">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button id="bulk-action-btn" class="btn btn-primary">
+                <i class="fas fa-tasks"></i> Bulk Actions
+              </button>
+            </div>
+          </div>
+          
+          <!-- PTO Stats Cards -->
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value" id="pending-requests-count">0</div>
+                <div class="stats-label">Pending Requests</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value" id="approved-requests-count">0</div>
+                <div class="stats-label">Approved Requests</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value" id="denied-requests-count">0</div>
+                <div class="stats-label">Denied Requests</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value" id="total-hours-approved">0</div>
+                <div class="stats-label">Total Hours Approved (Current Month)</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Search and Filter -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <input type="text" id="search-requests" class="form-control" placeholder="Search requests...">
+                </div>
+                <div class="col-md-3">
+                  <select id="status-filter" class="form-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Denied">Denied</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select id="employee-filter" class="form-select">
+                    <option value="all">All Employees</option>
+                    <!-- Will be populated dynamically -->
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <div class="input-group">
+                    <input type="text" id="date-range-filter" class="form-control" placeholder="Date range">
+                    <button id="reset-filters" class="btn btn-secondary">Reset</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- PTO Requests Table -->
+          <div class="card">
+            <div class="card-body">
+              <div class="table-container">
+                <table class="table" id="pto-requests-table">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" id="select-all-requests"></th>
+                      <th>Request ID</th>
+                      <th>Employee</th>
+                      <th>Request Date</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Hours</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pto-requests-table-body">
+                    <!-- Will be populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PTO Balances Tab -->
+        <div id="pto-balances-tab" class="tab-content">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Employee PTO Balances</h2>
+            <div>
+              <button id="export-balances-csv" class="btn btn-secondary me-2">
+                <i class="fas fa-file-export"></i> Export CSV
+              </button>
+              <button id="adjust-balance-btn" class="btn btn-primary">
+                <i class="fas fa-balance-scale"></i> Adjust Balance
+              </button>
+            </div>
+          </div>
+          
+          <!-- Search and Filter -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <input type="text" id="search-balances" class="form-control" placeholder="Search employees...">
+                </div>
+                <div class="col-md-4">
+                  <select id="department-filter" class="form-select">
+                    <option value="all">All Departments</option>
+                    <!-- Will be populated dynamically -->
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <button id="reset-balance-filters" class="btn btn-secondary w-100">Reset</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- PTO Balances Table -->
+          <div class="card">
+            <div class="card-body">
+              <div class="table-container">
+                <table class="table" id="pto-balances-table">
+                  <thead>
+                    <tr>
+                      <th>Employee ID</th>
+                      <th>Name</th>
+                      <th>Department</th>
+                      <th>Hire Date</th>
+                      <th>Accrual Rate</th>
+                      <th>Current Balance</th>
+                      <th>YTD Used</th>
+                      <th>Pending Hours</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pto-balances-table-body">
+                    <!-- Will be populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Accrual Settings Tab -->
+        <div id="accrual-settings-tab" class="tab-content">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>PTO Accrual Settings</h2>
+            <button id="save-accrual-settings" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-header">
+              Global Accrual Settings
+            </div>
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="accrual-frequency" class="form-label">Accrual Frequency</label>
+                  <select id="accrual-frequency" class="form-select">
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="annually">Annually</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="default-accrual-rate" class="form-label">Default Accrual Rate (Hours)</label>
+                  <input type="number" id="default-accrual-rate" class="form-control" step="0.01" min="0">
+                </div>
+                <div class="col-md-4">
+                  <label for="max-carryover" class="form-label">Max Annual Carryover (Hours)</label>
+                  <input type="number" id="max-carryover" class="form-control" step="1" min="0">
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="pto-reset-date" class="form-label">Annual Reset Date</label>
+                  <input type="date" id="pto-reset-date" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <label for="probation-period" class="form-label">New Hire Probation Period (Days)</label>
+                  <input type="number" id="probation-period" class="form-control" step="1" min="0">
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" id="auto-approve-checkbox">
+                    <label class="form-check-label" for="auto-approve-checkbox">
+                      Enable automatic approval for requests under 8 hours
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-header">
+              Tenure-Based Accrual Rules
+            </div>
+            <div class="card-body">
+              <table class="table" id="tenure-rules-table">
+                <thead>
+                  <tr>
+                    <th>Years of Service</th>
+                    <th>Accrual Rate (Hours)</th>
+                    <th>Max Balance (Hours)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tenure-rules-body">
+                  <tr>
+                    <td><input type="number" class="form-control" value="0" min="0" step="1"></td>
+                    <td><input type="number" class="form-control" value="80" min="0" step="0.01"></td>
+                    <td><input type="number" class="form-control" value="120" min="0" step="1"></td>
+                    <td>
+                      <button class="btn btn-sm btn-danger delete-rule-btn">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><input type="number" class="form-control" value="5" min="0" step="1"></td>
+                    <td><input type="number" class="form-control" value="120" min="0" step="0.01"></td>
+                    <td><input type="number" class="form-control" value="180" min="0" step="1"></td>
+                    <td>
+                      <button class="btn btn-sm btn-danger delete-rule-btn">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <button id="add-tenure-rule" class="btn btn-secondary mt-2">
+                <i class="fas fa-plus"></i> Add Rule
+              </button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              Department-Specific Settings
+            </div>
+            <div class="card-body">
+              <table class="table" id="department-rules-table">
+                <thead>
+                  <tr>
+                    <th>Department</th>
+                    <th>Default Accrual Rate (Hours)</th>
+                    <th>Max Balance (Hours)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="department-rules-body">
+                  <!-- Will be populated dynamically -->
+                </tbody>
+              </table>
+              <button id="add-department-rule" class="btn btn-secondary mt-2">
+                <i class="fas fa-plus"></i> Add Department Rule
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PTO Calendar View Tab -->
+        <div id="pto-calendar-tab" class="tab-content">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>PTO Calendar</h2>
+            <div>
+              <select id="calendar-department-filter" class="form-select d-inline-block" style="width: auto;">
+                <option value="all">All Departments</option>
+                <!-- Will be populated dynamically -->
+              </select>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-body">
+              <div id="pto-calendar" class="calendar-container"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PTO Reports Tab -->
+        <div id="pto-reports-tab" class="tab-content">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>PTO Usage Reports</h2>
+            <div>
+              <button id="print-report" class="btn btn-secondary me-2">
+                <i class="fas fa-print"></i> Print
+              </button>
+              <button id="export-report" class="btn btn-primary">
+                <i class="fas fa-file-export"></i> Export
+              </button>
+            </div>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label for="report-type" class="form-label">Report Type</label>
+                  <select id="report-type" class="form-select">
+                    <option value="usage">PTO Usage</option>
+                    <option value="balance">Current Balances</option>
+                    <option value="forecast">Usage Forecast</option>
+                    <option value="trend">Usage Trends</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="report-period" class="form-label">Time Period</label>
+                  <select id="report-period" class="form-select">
+                    <option value="current-month">Current Month</option>
+                    <option value="current-quarter">Current Quarter</option>
+                    <option value="ytd">Year to Date</option>
+                    <option value="last-12-months">Last 12 Months</option>
+                    <option value="custom">Custom...</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="report-grouping" class="form-label">Group By</label>
+                  <select id="report-grouping" class="form-select">
+                    <option value="employee">Employee</option>
+                    <option value="department">Department</option>
+                    <option value="month">Month</option>
+                    <option value="reason">Reason</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="report-departments" class="form-label">Departments</label>
+                  <select id="report-departments" class="form-select">
+                    <option value="all">All Departments</option>
+                    <!-- Will be populated dynamically -->
+                  </select>
+                </div>
+                <div id="custom-date-range" class="col-md-6 mt-3 d-none">
+                  <div class="input-group">
+                    <input type="text" id="report-start-date" class="form-control" placeholder="Start Date">
+                    <span class="input-group-text">to</span>
+                    <input type="text" id="report-end-date" class="form-control" placeholder="End Date">
+                  </div>
+                </div>
+                <div class="col-md-6 mt-3">
+                  <button id="generate-report" class="btn btn-primary w-100">
+                    <i class="fas fa-chart-line"></i> Generate Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-body">
+              <div id="report-container">
+                <div class="text-center my-5 text-muted">
+                  <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                  <h4>Select report parameters above and generate a report</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modals -->
+  <!-- Request Details Modal -->
+  <div class="modal fade" id="request-details-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Request Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p><strong>Request ID:</strong> <span id="modal-request-id"></span></p>
+              <p><strong>Employee:</strong> <span id="modal-employee-name"></span></p>
+              <p><strong>Department:</strong> <span id="modal-department"></span></p>
+              <p><strong>Request Date:</strong> <span id="modal-request-date"></span></p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>From Date:</strong> <span id="modal-start-date"></span></p>
+              <p><strong>To Date:</strong> <span id="modal-end-date"></span></p>
+              <p><strong>Hours Requested:</strong> <span id="modal-hours"></span></p>
+              <p><strong>Status:</strong> <span id="modal-status"></span></p>
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <div class="card-header">Request Reason</div>
+            <div class="card-body">
+              <p id="modal-reason" class="mb-0"></p>
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <div class="card-header">Employee Notes</div>
+            <div class="card-body">
+              <p id="modal-employee-notes" class="mb-0">No additional notes provided.</p>
+            </div>
+          </div>
+          
+          <div class="card mb-3">
+            <div class="card-header">Manager Comments</div>
+            <div class="card-body">
+              <textarea id="modal-manager-comments" class="form-control" rows="3" placeholder="Add your comments here..."></textarea>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">Employee PTO Balance</div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <p><strong>Current Balance:</strong> <span id="modal-current-balance"></span> hours</p>
+                </div>
+                <div class="col-md-4">
+                  <p><strong>Pending Requests:</strong> <span id="modal-pending-hours"></span> hours</p>
+                </div>
+                <div class="col-md-4">
+                  <p><strong>Balance After Approval:</strong> <span id="modal-after-approval"></span> hours</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" id="modal-deny-btn" class="btn btn-danger">Deny Request</button>
+          <button type="button" id="modal-approve-btn" class="btn btn-success">Approve Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Adjust Balance Modal -->
+  <div class="modal fade" id="adjust-balance-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Adjust PTO Balance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="adjust-employee" class="form-label">Employee</label>
+            <select id="adjust-employee" class="form-select">
+              <!-- Will be populated dynamically -->
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="adjust-type" class="form-label">Adjustment Type</label>
+            <select id="adjust-type" class="form-select">
+              <option value="add">Add Hours</option>
+              <option value="subtract">Subtract Hours</option>
+              <option value="set">Set to Specific Value</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="adjust-hours" class="form-label">Hours</label>
+            <input type="number" id="adjust-hours" class="form-control" step="0.01" min="0">
+          </div>
+          
+          <div class="mb-3">
+            <label for="adjust-reason" class="form-label">Reason for Adjustment</label>
+            <textarea id="adjust-reason" class="form-control" rows="3" placeholder="Provide a reason for this adjustment"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="save-adjustment" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bulk Actions Modal -->
+  <div class="modal fade" id="bulk-actions-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Bulk Actions</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Selected <span id="selected-count">0</span> requests. Choose an action:</p>
+          
+          <div class="mb-3">
+            <select id="bulk-action-type" class="form-select">
+              <option value="">Select action...</option>
+              <option value="approve">Approve All Selected</option>
+              <option value="deny">Deny All Selected</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="bulk-comments" class="form-label">Comments</label>
+            <textarea id="bulk-comments" class="form-control" rows="3" placeholder="Add comments to all selected requests"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="apply-bulk-action" class="btn btn-primary">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Global variables
+    let ptoRequests = [];
+    let employees = [];
+    let departments = [];
+    let calendar;
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tab navigation
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', function() {
+          // Remove active class from all sidebar items
+          document.querySelectorAll('.sidebar-item').forEach(i => {
+            i.classList.remove('active');
+          });
+          
+          // Add active class to clicked item
+          this.classList.add('active');
+          
+          // Hide all tab content
+          document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          
+          // Show selected tab
+          const tabId = this.getAttribute('data-tab') + '-tab';
+          document.getElementById(tabId).classList.add('active');
+          
+          // Special handling for calendar tab - render calendar when tab is shown
+          if (tabId === 'pto-calendar-tab' && !calendar) {
+            initializeCalendar();
+          }
+        });
+      });
+      
+      // Initialize date pickers
+      initializeDatePickers();
+      
+      // Load initial data
+      loadEmployees();
+      loadPTORequests();
+      loadPTOBalances();
+      loadAccrualSettings();
+      
+      // Set up event listeners
+      setupEventListeners();
+    });
+
+    function showAlert(message, type = 'success') {
+      const alertsContainer = document.getElementById('alerts-container');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible fade show`;
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      alertsContainer.appendChild(alert);
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => alert.remove(), 150);
+      }, 5000);
+    }
+
+    function initializeDatePickers() {
+      // Initialize request date filter
+      flatpickr("#date-range-filter", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        placeholder: "Filter by date range"
+      });
+      
+      // Initialize report date pickers
+      flatpickr("#report-start-date", {
+        dateFormat: "Y-m-d",
+        placeholder: "Start date"
+      });
+      
+      flatpickr("#report-end-date", {
+        dateFormat: "Y-m-d",
+        placeholder: "End date"
+      });
+    }
+
+    function initializeCalendar() {
+      const calendarEl = document.getElementById('pto-calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        events: getCalendarEvents(),
+        eventClick: function(info) {
+          openRequestDetails(info.event.extendedProps.requestId);
+        },
+        eventClassNames: function(info) {
+          return [info.event.extendedProps.status.toLowerCase()];
+        }
+      });
+      calendar.render();
+    }
+
+    function getCalendarEvents() {
+      // Convert PTO requests to calendar events format
+      return ptoRequests.map(request => {
+        return {
+          title: `${request.employeeName} (${request.hours}h)`,
+          start: request.startDate,
+          end: request.endDate,
+          extendedProps: {
+            requestId: request.requestId,
+            status: request.status
+          }
+        };
+      });
+    }
+
+    function loadEmployees() {
+      google.script.run
+        .withSuccessHandler(onEmployeesLoaded)
+        .withFailureHandler(handleError)
+        .getEmployeesForPTOManagement();
+    }
+
+    function onEmployeesLoaded(result) {
+      if (result.success) {
+        employees = result.data;
+        
+        // Populate employee filter dropdowns
+        populateEmployeeDropdowns();
+        
+        // Extract departments
+        const deptSet = new Set();
+        employees.forEach(emp => deptSet.add(emp.department));
+        departments = [...deptSet];
+        
+        // Populate department dropdowns
+        populateDepartmentDropdowns();
+      } else {
+        showAlert("Failed to load employees: " + result.message, 'danger');
+      }
+    }
+
+    function populateEmployeeDropdowns() {
+      const employeeFilter = document.getElementById('employee-filter');
+      const adjustEmployee = document.getElementById('adjust-employee');
+      
+      // Clear existing options except the first one
+      employeeFilter.innerHTML = '<option value="all">All Employees</option>';
+      adjustEmployee.innerHTML = '<option value="">Select Employee...</option>';
+      
+      // Add employees to dropdowns
+      employees.forEach(emp => {
+        const option = document.createElement('option');
+        option.value = emp.employeeId;
+        option.textContent = `${emp.firstName} ${emp.lastName}`;
+        
+        employeeFilter.appendChild(option.cloneNode(true));
+        adjustEmployee.appendChild(option);
+      });
+    }
+
+    function populateDepartmentDropdowns() {
+      const departmentFilter = document.getElementById('department-filter');
+      const calendarDeptFilter = document.getElementById('calendar-department-filter');
+      const reportDeptFilter = document.getElementById('report-departments');
+      
+      // Clear existing options except the first one
+      departmentFilter.innerHTML = '<option value="all">All Departments</option>';
+      calendarDeptFilter.innerHTML = '<option value="all">All Departments</option>';
+      reportDeptFilter.innerHTML = '<option value="all">All Departments</option>';
+      
+      // Add departments to dropdowns
+      departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        
+        departmentFilter.appendChild(option.cloneNode(true));
+        calendarDeptFilter.appendChild(option.cloneNode(true));
+        reportDeptFilter.appendChild(option);
+      });
+      
+      // Populate department rules table
+      populateDepartmentRules();
+    }
+
+    function loadPTORequests() {
+      google.script.run
+        .withSuccessHandler(onPTORequestsLoaded)
+        .withFailureHandler(handleError)
+        .getPTORequests();
+    }
+
+    function onPTORequestsLoaded(result) {
+      if (result.success) {
+        ptoRequests = result.data;
+        updateRequestsTable();
+        updateRequestStats();
+      } else {
+        showAlert("Failed to load PTO requests: " + result.message, 'danger');
+      }
+    }
+
+    function updateRequestsTable() {
+      const tbody = document.getElementById('pto-requests-table-body');
+      tbody.innerHTML = '';
+      
+      // Apply filters
+      const filteredRequests = filterRequests();
+      
+      if (filteredRequests.length === 0) {
+        // No requests after filtering
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="10" class="text-center">No requests found matching the current filters.</td>`;
+        tbody.appendChild(row);
+        return;
+      }
+      
+      // Add requests to table
+      filteredRequests.forEach(request => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><input type="checkbox" class="request-checkbox" data-request-id="${request.requestId}"></td>
+          <td>${request.requestId}</td>
+          <td>${request.employeeName}</td>
+          <td>${formatDate(request.requestDate)}</td>
+          <td>${formatDate(request.startDate)}</td>
+          <td>${formatDate(request.endDate)}</td>
+          <td>${request.hours}</td>
+          <td>${truncateText(request.reason, 30)}</td>
+          <td><span class="badge badge-${getBadgeClass(request.status)}">${request.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary view-request-btn" data-request-id="${request.requestId}">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      // Add event listeners to view buttons
+      document.querySelectorAll('.view-request-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const requestId = this.getAttribute('data-request-id');
+          openRequestDetails(requestId);
+        });
+      });
+    }
+
+    function filterRequests() {
+      const searchTerm = document.getElementById('search-requests').value.toLowerCase();
+      const statusFilter = document.getElementById('status-filter').value;
+      const employeeFilter = document.getElementById('employee-filter').value;
+      const dateRangeFilter = document.getElementById('date-range-filter').value;
+      
+      return ptoRequests.filter(request => {
+        // Search term filter
+        const matchesSearch = 
+          request.requestId.toLowerCase().includes(searchTerm) ||
+          request.employeeName.toLowerCase().includes(searchTerm) ||
+          request.reason.toLowerCase().includes(searchTerm);
+        
+        // Status filter
+        const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+        
+        // Employee filter
+        const matchesEmployee = employeeFilter === 'all' || request.employeeId === employeeFilter;
+        
+        // Date range filter
+        let matchesDateRange = true;
+        if (dateRangeFilter) {
+          const dates = dateRangeFilter.split(' to ');
+          if (dates.length === 2) {
+            const startDate = new Date(dates[0]);
+            const endDate = new Date(dates[1]);
+            const requestStart = new Date(request.startDate);
+            const requestEnd = new Date(request.endDate);
+            
+            // Check if request period overlaps with filter period
+            matchesDateRange = 
+              (requestStart <= endDate && requestEnd >= startDate);
+          }
+        }
+        
+        return matchesSearch && matchesStatus && matchesEmployee && matchesDateRange;
+      });
+    }
+
+    function updateRequestStats() {
+      // Count by status
+      const pending = ptoRequests.filter(r => r.status === 'Pending').length;
+      const approved = ptoRequests.filter(r => r.status === 'Approved').length;
+      const denied = ptoRequests.filter(r => r.status === 'Denied').length;
+      
+      // Calculate total approved hours for current month
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      const approvedHours = ptoRequests
+        .filter(r => {
+          const startDate = new Date(r.startDate);
+          return r.status === 'Approved' && 
+                 startDate.getMonth() === currentMonth && 
+                 startDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, r) => sum + parseFloat(r.hours), 0);
+      
+      // Update stats display
+      document.getElementById('pending-requests-count').textContent = pending;
+      document.getElementById('approved-requests-count').textContent = approved;
+      document.getElementById('denied-requests-count').textContent = denied;
+      document.getElementById('total-hours-approved').textContent = approvedHours.toFixed(1);
+    }
+
+    function loadPTOBalances() {
+      google.script.run
+        .withSuccessHandler(onPTOBalancesLoaded)
+        .withFailureHandler(handleError)
+        .getEmployeePTOBalances();
+    }
+
+    function onPTOBalancesLoaded(result) {
+      if (result.success) {
+        updateBalancesTable(result.data);
+      } else {
+        showAlert("Failed to load PTO balances: " + result.message, 'danger');
+      }
+    }
+
+    function updateBalancesTable(balances) {
+      const tbody = document.getElementById('pto-balances-table-body');
+      tbody.innerHTML = '';
+      
+      balances.forEach(employee => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${employee.employeeId}</td>
+          <td>${employee.firstName} ${employee.lastName}</td>
+          <td>${employee.department}</td>
+          <td>${formatDate(employee.hireDate)}</td>
+          <td>${employee.accrualRate} hrs/period</td>
+          <td>${employee.ptoBalance} hrs</td>
+          <td>${employee.ytdUsed} hrs</td>
+          <td>${employee.pendingHours} hrs</td>
+          <td>
+            <button class="btn btn-sm btn-primary adjust-balance-btn" data-employee-id="${employee.employeeId}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-secondary view-history-btn" data-employee-id="${employee.employeeId}">
+              <i class="fas fa-history"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      // Add event listeners
+      document.querySelectorAll('.adjust-balance-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const employeeId = this.getAttribute('data-employee-id');
+          openAdjustBalanceModal(employeeId);
+        });
+      });
+      
+      document.querySelectorAll('.view-history-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const employeeId = this.getAttribute('data-employee-id');
+          viewPTOHistory(employeeId);
+        });
+      });
+    }
+
+    function loadAccrualSettings() {
+      google.script.run
+        .withSuccessHandler(onAccrualSettingsLoaded)
+        .withFailureHandler(handleError)
+        .getPTOAccrualSettings();
+    }
+
+    function onAccrualSettingsLoaded(result) {
+      if (result.success) {
+        const settings = result.data;
+        
+        // Populate global settings
+        document.getElementById('accrual-frequency').value = settings.accrualFrequency || 'biweekly';
+        document.getElementById('default-accrual-rate').value = settings.defaultAccrualRate || 80;
+        document.getElementById('max-carryover').value = settings.maxCarryover || 40;
+        document.getElementById('pto-reset-date').value = settings.resetDate || '';
+        document.getElementById('probation-period').value = settings.probationPeriod || 90;
+        document.getElementById('auto-approve-checkbox').checked = settings.autoApproveUnder8Hours || false;
+        
+        // Populate tenure rules if available
+        if (settings.tenureRules && settings.tenureRules.length > 0) {
+          populateTenureRules(settings.tenureRules);
+        }
+        
+        // Populate department rules if available
+        if (settings.departmentRules && Object.keys(settings.departmentRules).length > 0) {
+          populateDepartmentRulesFromSettings(settings.departmentRules);
+        }
+      } else {
+        showAlert("Failed to load accrual settings: " + result.message, 'danger');
+      }
+    }
+
+    function populateTenureRules(rules) {
+      const tbody = document.getElementById('tenure-rules-body');
+      tbody.innerHTML = '';
+      
+      rules.forEach(rule => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><input type="number" class="form-control" value="${rule.years}" min="0" step="1"></td>
+          <td><input type="number" class="form-control" value="${rule.accrualRate}" min="0" step="0.01"></td>
+          <td><input type="number" class="form-control" value="${rule.maxBalance}" min="0" step="1"></td>
+          <td>
+            <button class="btn btn-sm btn-danger delete-rule-btn">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      // Re-add event listeners to delete buttons
+      addDeleteRuleListeners();
+    }
+
+    function populateDepartmentRules() {
+      const tbody = document.getElementById('department-rules-body');
+      tbody.innerHTML = '';
+      
+      departments.forEach(dept => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${dept}</td>
+          <td><input type="number" class="form-control" value="" min="0" step="0.01"></td>
+          <td><input type="number" class="form-control" value="" min="0" step="1"></td>
+          <td>
+            <button class="btn btn-sm btn-danger delete-dept-rule-btn">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      // Add event listeners to delete buttons
+      addDeleteDeptRuleListeners();
+    }
+
+    function populateDepartmentRulesFromSettings(rules) {
+      const tbody = document.getElementById('department-rules-body');
+      const rows = tbody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        const deptName = row.cells[0].textContent;
+        const accrualInput = row.cells[1].querySelector('input');
+        const maxBalanceInput = row.cells[2].querySelector('input');
+        
+        if (rules[deptName]) {
+          accrualInput.value = rules[deptName].accrualRate || '';
+          maxBalanceInput.value = rules[deptName].maxBalance || '';
+        }
+      });
+    }
+
+    function setupEventListeners() {
+      // Filter reset button
+      document.getElementById('reset-filters').addEventListener('click', function() {
+        document.getElementById('search-requests').value = '';
+        document.getElementById('status-filter').value = 'all';
+        document.getElementById('employee-filter').value = 'all';
+        document.getElementById('date-range-filter').value = '';
+        updateRequestsTable();
+      });
+      
+      // Balance filter reset button
+      document.getElementById('reset-balance-filters').addEventListener('click', function() {
+        document.getElementById('search-balances').value = '';
+        document.getElementById('department-filter').value = 'all';
+        loadPTOBalances();
+      });
+      
+      // Search functionality
+      document.getElementById('search-requests').addEventListener('input', updateRequestsTable);
+      document.getElementById('status-filter').addEventListener('change', updateRequestsTable);
+      document.getElementById('employee-filter').addEventListener('change', updateRequestsTable);
+      document.getElementById('date-range-filter').addEventListener('change', updateRequestsTable);
+      
+      // Balance search
+      document.getElementById('search-balances').addEventListener('input', function() {
+        filterBalances();
+      });
+      
+      document.getElementById('department-filter').addEventListener('change', function() {
+        filterBalances();
+      });
+      
+      // Select all requests checkbox
+      document.getElementById('select-all-requests').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.request-checkbox');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+        updateSelectedCount();
+      });
+      
+      // Bulk action button
+      document.getElementById('bulk-action-btn').addEventListener('click', function() {
+        updateSelectedCount();
+        // Open bulk actions modal
+        const modal = new bootstrap.Modal(document.getElementById('bulk-actions-modal'));
+        modal.show();
+      });
+      
+      // Apply bulk action
+      document.getElementById('apply-bulk-action').addEventListener('click', function() {
+        applyBulkAction();
+      });
+      
+      // Report period change
+      document.getElementById('report-period').addEventListener('change', function() {
+        const customDateRange = document.getElementById('custom-date-range');
+        if (this.value === 'custom') {
+          customDateRange.classList.remove('d-none');
+        } else {
+          customDateRange.classList.add('d-none');
+        }
+      });
+      
+      // Generate report button
+      document.getElementById('generate-report').addEventListener('click', function() {
+        generateReport();
+      });
+      
+      // Add tenure rule button
+      document.getElementById('add-tenure-rule').addEventListener('click', function() {
+        addTenureRule();
+      });
+      // Add department rule button
+      document.getElementById('add-department-rule').addEventListener('click', function() {
+        addDepartmentRule();
+      });
+      
+      // Save accrual settings button
+      document.getElementById('save-accrual-settings').addEventListener('click', function() {
+        saveAccrualSettings();
+      });
+      
+      // Adjust balance button
+      document.getElementById('adjust-balance-btn').addEventListener('click', function() {
+        // Open modal with blank form
+        openAdjustBalanceModal();
+      });
+      
+      // Save adjustment button
+      document.getElementById('save-adjustment').addEventListener('click', function() {
+        saveBalanceAdjustment();
+      });
+      
+      // Calendar department filter
+      document.getElementById('calendar-department-filter').addEventListener('change', function() {
+        filterCalendarEvents();
+      });
+      
+      // Refresh PTO requests button
+      document.getElementById('refresh-pto-requests').addEventListener('click', function() {
+        loadPTORequests();
+      });
+      
+      // Export balances button
+      document.getElementById('export-balances-csv').addEventListener('click', function() {
+        exportBalancesToCSV();
+      });
+      
+      // Export report button
+      document.getElementById('export-report').addEventListener('click', function() {
+        exportReportToCSV();
+      });
+      
+      // Print report button
+      document.getElementById('print-report').addEventListener('click', function() {
+        printReport();
+      });
+    }
+
+    function updateSelectedCount() {
+      const selectedCheckboxes = document.querySelectorAll('.request-checkbox:checked');
+      document.getElementById('selected-count').textContent = selectedCheckboxes.length;
+    }
+
+    function applyBulkAction() {
+      const action = document.getElementById('bulk-action-type').value;
+      const comments = document.getElementById('bulk-comments').value;
+      
+      if (!action) {
+        showAlert("Please select an action to apply", 'warning');
+        return;
+      }
+      
+      const selectedCheckboxes = document.querySelectorAll('.request-checkbox:checked');
+      if (selectedCheckboxes.length === 0) {
+        showAlert("No requests selected", 'warning');
+        return;
+      }
+      
+      // Get all selected request IDs
+      const requestIds = Array.from(selectedCheckboxes).map(checkbox => 
+        checkbox.getAttribute('data-request-id')
+      );
+      
+      // Apply action via Google Script
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showAlert(`Successfully ${action === 'approve' ? 'approved' : 'denied'} ${requestIds.length} requests`);
+            loadPTORequests(); // Reload data
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulk-actions-modal'));
+            modal.hide();
+          } else {
+            showAlert("Error applying bulk action: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .bulkUpdatePTORequests(requestIds, action, comments);
+    }
+
+    function openRequestDetails(requestId) {
+      // Find the request
+      const request = ptoRequests.find(r => r.requestId === requestId);
+      if (!request) {
+        showAlert("Request not found", 'danger');
+        return;
+      }
+      
+      // Find the employee
+      const employee = employees.find(e => e.employeeId === request.employeeId);
+      
+      // Populate modal
+      document.getElementById('modal-request-id').textContent = request.requestId;
+      document.getElementById('modal-employee-name').textContent = request.employeeName;
+      document.getElementById('modal-department').textContent = employee ? employee.department : 'Unknown';
+      document.getElementById('modal-request-date').textContent = formatDate(request.requestDate);
+      document.getElementById('modal-start-date').textContent = formatDate(request.startDate);
+      document.getElementById('modal-end-date').textContent = formatDate(request.endDate);
+      document.getElementById('modal-hours').textContent = request.hours;
+      document.getElementById('modal-status').textContent = request.status;
+      document.getElementById('modal-reason').textContent = request.reason;
+      document.getElementById('modal-manager-comments').value = request.managerComments || '';
+      
+      // Get employee PTO balance from Google Script
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            const balance = result.data;
+            document.getElementById('modal-current-balance').textContent = balance.currentBalance;
+            document.getElementById('modal-pending-hours').textContent = balance.pendingHours;
+            
+            // Calculate balance after approval (if request is pending)
+            if (request.status === 'Pending') {
+              const afterApproval = parseFloat(balance.currentBalance) - parseFloat(request.hours);
+              document.getElementById('modal-after-approval').textContent = afterApproval.toFixed(1);
+            } else {
+              document.getElementById('modal-after-approval').textContent = 'N/A';
+            }
+          } else {
+            showAlert("Could not retrieve balance information", 'warning');
+          }
+        })
+        .withFailureHandler(handleError)
+        .getEmployeePTOBalance(request.employeeId);
+      
+      // Set up approve/deny buttons
+      const approveBtn = document.getElementById('modal-approve-btn');
+      const denyBtn = document.getElementById('modal-deny-btn');
+      
+      if (request.status === 'Pending') {
+        approveBtn.style.display = 'block';
+        denyBtn.style.display = 'block';
+        
+        approveBtn.onclick = function() {
+          updateRequestStatus(request.requestId, 'Approved');
+        };
+        
+        denyBtn.onclick = function() {
+          updateRequestStatus(request.requestId, 'Denied');
+        };
+      } else {
+        approveBtn.style.display = 'none';
+        denyBtn.style.display = 'none';
+      }
+      
+      // Show the modal
+      const modal = new bootstrap.Modal(document.getElementById('request-details-modal'));
+      modal.show();
+    }
+
+    function updateRequestStatus(requestId, status) {
+      const comments = document.getElementById('modal-manager-comments').value;
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showAlert(`Request ${requestId} has been ${status.toLowerCase()}`);
+            loadPTORequests(); // Reload data
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('request-details-modal'));
+            modal.hide();
+          } else {
+            showAlert("Error updating request: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .updatePTORequest(requestId, status, comments);
+    }
+
+    function openAdjustBalanceModal(employeeId = null) {
+      if (employeeId) {
+        // Pre-select the employee
+        document.getElementById('adjust-employee').value = employeeId;
+      }
+      
+      // Reset the form
+      document.getElementById('adjust-type').value = 'add';
+      document.getElementById('adjust-hours').value = '';
+      document.getElementById('adjust-reason').value = '';
+      
+      // Show the modal
+      const modal = new bootstrap.Modal(document.getElementById('adjust-balance-modal'));
+      modal.show();
+    }
+
+    function saveBalanceAdjustment() {
+      const employeeId = document.getElementById('adjust-employee').value;
+      const adjustType = document.getElementById('adjust-type').value;
+      const hours = document.getElementById('adjust-hours').value;
+      const reason = document.getElementById('adjust-reason').value;
+      
+      if (!employeeId || !hours) {
+        showAlert("Please select an employee and enter hours", 'warning');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showAlert("PTO balance adjustment saved successfully");
+            loadPTOBalances(); // Reload balances
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('adjust-balance-modal'));
+            modal.hide();
+          } else {
+            showAlert("Error adjusting balance: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .adjustPTOBalance(employeeId, adjustType, hours, reason);
+    }
+
+    function viewPTOHistory(employeeId) {
+      // Find employee name
+      const employee = employees.find(e => e.employeeId === employeeId);
+      const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : `Employee ${employeeId}`;
+      
+      // Get their PTO history
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            // Generate a report with the history
+            const reportContainer = document.getElementById('report-container');
+            
+            // Create report content
+            let html = `
+              <h3>PTO History: ${employeeName}</h3>
+              <div class="table-container mt-4">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Hours</th>
+                      <th>Balance After</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
+            
+            if (result.data.length === 0) {
+              html += `<tr><td colspan="5" class="text-center">No PTO transactions found for this employee</td></tr>`;
+            } else {
+              result.data.forEach(transaction => {
+                html += `
+                  <tr>
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.type}</td>
+                    <td>${transaction.hours > 0 ? '+' : ''}${transaction.hours}</td>
+                    <td>${transaction.balanceAfter}</td>
+                    <td>${transaction.notes || ''}</td>
+                  </tr>
+                `;
+              });
+            }
+            
+            html += `
+                  </tbody>
+                </table>
+              </div>
+            `;
+            
+            reportContainer.innerHTML = html;
+            
+            // Switch to reports tab
+            document.querySelector('.sidebar-item[data-tab="pto-reports"]').click();
+            
+          } else {
+            showAlert("Error retrieving PTO history: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .getEmployeePTOHistory(employeeId);
+    }
+
+    function saveAccrualSettings() {
+      // Collect global settings
+      const settings = {
+        accrualFrequency: document.getElementById('accrual-frequency').value,
+        defaultAccrualRate: document.getElementById('default-accrual-rate').value,
+        maxCarryover: document.getElementById('max-carryover').value,
+        resetDate: document.getElementById('pto-reset-date').value,
+        probationPeriod: document.getElementById('probation-period').value,
+        autoApproveUnder8Hours: document.getElementById('auto-approve-checkbox').checked,
+        tenureRules: collectTenureRules(),
+        departmentRules: collectDepartmentRules()
+      };
+      
+      // Save via Google Script
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showAlert("Accrual settings saved successfully");
+          } else {
+            showAlert("Error saving settings: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .savePTOAccrualSettings(settings);
+    }
+
+    function collectTenureRules() {
+      const rules = [];
+      const rows = document.querySelectorAll('#tenure-rules-body tr');
+      
+      rows.forEach(row => {
+        const years = parseInt(row.cells[0].querySelector('input').value);
+        const accrualRate = parseFloat(row.cells[1].querySelector('input').value);
+        const maxBalance = parseInt(row.cells[2].querySelector('input').value);
+        
+        if (!isNaN(years) && !isNaN(accrualRate)) {
+          rules.push({
+            years: years,
+            accrualRate: accrualRate,
+            maxBalance: maxBalance || 0
+          });
+        }
+      });
+      
+      // Sort by years of service
+      rules.sort((a, b) => a.years - b.years);
+      
+      return rules;
+    }
+
+    function collectDepartmentRules() {
+      const rules = {};
+      const rows = document.querySelectorAll('#department-rules-body tr');
+      
+      rows.forEach(row => {
+        const department = row.cells[0].textContent;
+        const accrualRate = parseFloat(row.cells[1].querySelector('input').value);
+        const maxBalance = parseInt(row.cells[2].querySelector('input').value);
+        
+        if (!isNaN(accrualRate) || !isNaN(maxBalance)) {
+          rules[department] = {
+            accrualRate: accrualRate || null,
+            maxBalance: maxBalance || null
+          };
+        }
+      });
+      
+      return rules;
+    }
+
+    function addTenureRule() {
+      const tbody = document.getElementById('tenure-rules-body');
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td><input type="number" class="form-control" value="0" min="0" step="1"></td>
+        <td><input type="number" class="form-control" value="80" min="0" step="0.01"></td>
+        <td><input type="number" class="form-control" value="120" min="0" step="1"></td>
+        <td>
+          <button class="btn btn-sm btn-danger delete-rule-btn">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      tbody.appendChild(row);
+      
+      // Add event listener to new delete button
+      row.querySelector('.delete-rule-btn').addEventListener('click', function() {
+        tbody.removeChild(row);
+      });
+    }
+
+    function addDepartmentRule() {
+      // Open a prompt to enter a new department name
+      const departmentName = prompt("Enter new department name:");
+      
+      if (!departmentName) return;
+      
+      const tbody = document.getElementById('department-rules-body');
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${departmentName}</td>
+        <td><input type="number" class="form-control" value="" min="0" step="0.01"></td>
+        <td><input type="number" class="form-control" value="" min="0" step="1"></td>
+        <td>
+          <button class="btn btn-sm btn-danger delete-dept-rule-btn">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      tbody.appendChild(row);
+      
+      // Add event listener to new delete button
+      row.querySelector('.delete-dept-rule-btn').addEventListener('click', function() {
+        tbody.removeChild(row);
+      });
+      
+      // Add to departments list if not already there
+      if (!departments.includes(departmentName)) {
+        departments.push(departmentName);
+        populateDepartmentDropdowns();
+      }
+    }
+
+    function addDeleteRuleListeners() {
+      document.querySelectorAll('.delete-rule-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const row = this.closest('tr');
+          row.parentNode.removeChild(row);
+        });
+      });
+    }
+
+    function addDeleteDeptRuleListeners() {
+      document.querySelectorAll('.delete-dept-rule-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const row = this.closest('tr');
+          row.parentNode.removeChild(row);
+        });
+      });
+    }
+
+    function filterBalances() {
+      const searchTerm = document.getElementById('search-balances').value.toLowerCase();
+      const departmentFilter = document.getElementById('department-filter').value;
+      
+      // Get all rows in the balances table
+      const rows = document.querySelectorAll('#pto-balances-table-body tr');
+      
+      rows.forEach(row => {
+        const name = row.cells[1].textContent.toLowerCase();
+        const employeeId = row.cells[0].textContent.toLowerCase();
+        const department = row.cells[2].textContent;
+        
+        const matchesSearch = name.includes(searchTerm) || employeeId.includes(searchTerm);
+        const matchesDepartment = departmentFilter === 'all' || department === departmentFilter;
+        
+        if (matchesSearch && matchesDepartment) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function filterCalendarEvents() {
+      const departmentFilter = document.getElementById('calendar-department-filter').value;
+      
+      if (!calendar) return;
+      
+      // Clear all events
+      calendar.removeAllEvents();
+      
+      // Filter events by department
+      let filteredEvents = ptoRequests;
+      
+      if (departmentFilter !== 'all') {
+        filteredEvents = ptoRequests.filter(request => {
+          const employee = employees.find(e => e.employeeId === request.employeeId);
+          return employee && employee.department === departmentFilter;
+        });
+      }
+      
+      // Add filtered events to calendar
+      const calendarEvents = filteredEvents.map(request => {
+        return {
+          title: `${request.employeeName} (${request.hours}h)`,
+          start: request.startDate,
+          end: request.endDate,
+          extendedProps: {
+            requestId: request.requestId,
+            status: request.status
+          }
+        };
+      });
+      
+      calendar.addEventSource(calendarEvents);
+    }
+
+    function generateReport() {
+      const reportType = document.getElementById('report-type').value;
+      const period = document.getElementById('report-period').value;
+      const groupBy = document.getElementById('report-grouping').value;
+      const department = document.getElementById('report-departments').value;
+      
+      let startDate = null;
+      let endDate = null;
+      
+      if (period === 'custom') {
+        startDate = document.getElementById('report-start-date').value;
+        endDate = document.getElementById('report-end-date').value;
+        
+        if (!startDate || !endDate) {
+          showAlert("Please select both start and end dates for custom period", 'warning');
+          return;
+        }
+      }
+      
+      // Generate report via Google Script
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            displayReport(result.data, reportType, groupBy);
+          } else {
+            showAlert("Error generating report: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .generatePTOReport(reportType, period, groupBy, department, startDate, endDate);
+    }
+
+    function displayReport(reportData, reportType, groupBy) {
+      const reportContainer = document.getElementById('report-container');
+      
+      // Create report title
+      let title = '';
+      switch(reportType) {
+        case 'usage':
+          title = 'PTO Usage Report';
+          break;
+        case 'balance':
+          title = 'Current PTO Balances Report';
+          break;
+        case 'forecast':
+          title = 'PTO Usage Forecast';
+          break;
+        case 'trend':
+          title = 'PTO Usage Trends';
+          break;
+      }
+      
+      // Create HTML for report
+      let html = `<h3>${title}</h3>`;
+      
+      // Add summary stats
+      if (reportData.summary) {
+        html += `
+          <div class="row mb-4 mt-3">
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value">${reportData.summary.totalRequests || 0}</div>
+                <div class="stats-label">Total Requests</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value">${reportData.summary.totalHours || 0}</div>
+                <div class="stats-label">Total Hours</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value">${reportData.summary.avgRequestLength || 0}</div>
+                <div class="stats-label">Avg Hours Per Request</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stats-card">
+                <div class="stats-value">${reportData.summary.uniqueEmployees || 0}</div>
+                <div class="stats-label">Unique Employees</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Add report data table
+      if (reportData.details && reportData.details.length > 0) {
+        html += `<div class="table-container"><table class="table">`;
+        
+        // Create table header based on report type and grouping
+        html += '<thead><tr>';
+        
+        switch(groupBy) {
+          case 'employee':
+            html += '<th>Employee</th>';
+            break;
+          case 'department':
+            html += '<th>Department</th>';
+            break;
+          case 'month':
+            html += '<th>Month</th>';
+            break;
+          case 'reason':
+            html += '<th>Reason</th>';
+            break;
+        }
+        
+        // Add columns based on report type
+        if (reportType === 'usage' || reportType === 'trend') {
+          html += '<th>Requests</th><th>Hours</th><th>% of Total</th>';
+        } else if (reportType === 'balance') {
+          html += '<th>Current Balance</th><th>YTD Used</th><th>Pending</th>';
+        } else if (reportType === 'forecast') {
+          html += '<th>Pending Requests</th><th>Pending Hours</th><th>Expected End Balance</th>';
+        }
+        
+        html += '</tr></thead><tbody>';
+        
+        // Add data rows
+        reportData.details.forEach(row => {
+          html += '<tr>';
+          
+          // First column based on grouping
+          switch(groupBy) {
+            case 'employee':
+              html += `<td>${row.employee || 'Unknown'}</td>`;
+              break;
+            case 'department':
+              html += `<td>${row.department || 'Unknown'}</td>`;
+              break;
+            case 'month':
+              html += `<td>${row.month || 'Unknown'}</td>`;
+              break;
+            case 'reason':
+              html += `<td>${row.reason || 'Unknown'}</td>`;
+              break;
+          }
+          
+          // Data columns based on report type
+          if (reportType === 'usage' || reportType === 'trend') {
+            html += `<td>${row.requests || 0}</td>`;
+            html += `<td>${row.hours || 0}</td>`;
+            html += `<td>${row.percentage || '0'}%</td>`;
+          } else if (reportType === 'balance') {
+            html += `<td>${row.currentBalance || 0}</td>`;
+            html += `<td>${row.ytdUsed || 0}</td>`;
+            html += `<td>${row.pending || 0}</td>`;
+          } else if (reportType === 'forecast') {
+            html += `<td>${row.pendingRequests || 0}</td>`;
+            html += `<td>${row.pendingHours || 0}</td>`;
+            html += `<td>${row.expectedEndBalance || 0}</td>`;
+          }
+          
+          html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+      } else {
+        html += '<div class="alert alert-info">No data available for this report.</div>';
+      }
+      
+      reportContainer.innerHTML = html;
+    }
+
+    function exportBalancesToCSV() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            // Create download link
+            createDownloadLink(result.data, 'pto_balances.csv');
+          } else {
+            showAlert("Error exporting balances: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .exportPTOBalancesToCSV();
+    }
+
+    function exportReportToCSV() {
+      // Get current report parameters
+      const reportType = document.getElementById('report-type').value;
+      const period = document.getElementById('report-period').value;
+      const groupBy = document.getElementById('report-grouping').value;
+      const department = document.getElementById('report-departments').value;
+      
+      let startDate = null;
+      let endDate = null;
+      
+      if (period === 'custom') {
+        startDate = document.getElementById('report-start-date').value;
+        endDate = document.getElementById('report-end-date').value;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            // Create download link
+            createDownloadLink(result.data, `pto_report_${reportType}.csv`);
+          } else {
+            showAlert("Error exporting report: " + result.message, 'danger');
+          }
+        })
+        .withFailureHandler(handleError)
+        .exportPTOReportToCSV(reportType, period, groupBy, department, startDate, endDate);
+    }
+
+    function createDownloadLink(csvContent, fileName) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      
+      if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, fileName);
+      } else {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    function printReport() {
+      window.print();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+      
+      return date.toLocaleDateString();
+    }
+
+    function truncateText(text, maxLength) {
+      if (!text) return '';
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    function getBadgeClass(status) {
+      switch(status) {
+        case 'Pending':
+          return 'pending';
+        case 'Approved':
+          return 'approved';
+        case 'Denied':
+          return 'denied';
+        default:
+          return 'secondary';
+      }
+    }
+
+    function handleError(error) {
+      console.error(error);
+      showAlert("An error occurred: " + error.message, 'danger');
+    }
+  </script>
+</body>
+</html>
+      

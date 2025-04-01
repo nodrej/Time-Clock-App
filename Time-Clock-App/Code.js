@@ -3,13 +3,6 @@ const SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty('SPRE
 const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
 
-//Testing
-//Testing Testing
-//Testing testing one
-//testing testing one two
-//testing testing one two three
-//testing testing one two three four
-//Testing Testing one two three four five
 
 
 
@@ -3259,6 +3252,471 @@ function getEmployeeTimeReport(employeeId) {
 }
 
 
+
+function getEmployeeTimeReportCustom(employeeId, startDate, endDate, payPeriodId = null) {
+  try {
+    Logger.log("Getting custom time report for employee ID: " + employeeId);
+    Logger.log("Start date input: " + startDate);
+    Logger.log("End date input: " + endDate);
+    Logger.log("Pay Period ID: " + payPeriodId);
+    
+    // Make sure employeeId is a string for consistent comparison
+    employeeId = String(employeeId).replace('.0', '');
+    
+    let start, end;
+    let payPeriod = null;
+    
+    // If payPeriodId is provided, get dates from the Pay Periods sheet
+    if (payPeriodId) {
+      const payPeriodsSheet = ss.getSheetByName('Pay Periods');
+      if (!payPeriodsSheet) {
+        return { success: false, message: "Pay Periods sheet not found" };
+      }
+      
+      const payPeriodsData = payPeriodsSheet.getDataRange().getValues();
+      
+      // Debug log to see what we're working with
+      Logger.log("Pay Periods Data headers: " + JSON.stringify(payPeriodsData[0]));
+      
+      // Find the specified pay period
+      for (let i = 1; i < payPeriodsData.length; i++) {
+        // Convert both to strings for comparison and remove any decimal points
+        const rowPayPeriodId = String(payPeriodsData[i][0]).replace('.0', '');
+        const searchPayPeriodId = String(payPeriodId).replace('.0', '');
+        
+        Logger.log(`Comparing row ID: ${rowPayPeriodId} with search ID: ${searchPayPeriodId}`);
+        
+        if (rowPayPeriodId === searchPayPeriodId) {
+          Logger.log("Found matching pay period at row " + i);
+          
+          // Check the column indices to make sure we're getting the right data
+          const startDateValue = payPeriodsData[i][2]; // Column C: start date
+          const endDateValue = payPeriodsData[i][4];   // Column E: end date
+          
+          Logger.log("Raw start date: " + startDateValue);
+          Logger.log("Raw end date: " + endDateValue);
+          
+          // Check if we have valid date values
+          if (!startDateValue || !endDateValue) {
+            return { 
+              success: false, 
+              message: `Invalid dates found for pay period ${payPeriodId}. Start: ${startDateValue}, End: ${endDateValue}` 
+            };
+          }
+          
+          try {
+            // Create proper Date objects
+            if (startDateValue instanceof Date) {
+              // Clone the date and set time to beginning of day in local timezone
+              start = new Date(startDateValue.getFullYear(), startDateValue.getMonth(), startDateValue.getDate(), 0, 0, 0, 0);
+            } else {
+              // For string dates, parse with explicit components
+              const startDateStr = String(startDateValue);
+              if (startDateStr.includes('/')) {
+                const [month, day, year] = startDateStr.split('/').map(Number);
+                start = new Date(year, month - 1, day, 0, 0, 0, 0);
+              } else if (startDateStr.includes('-')) {
+                const [year, month, day] = startDateStr.split('-').map(Number);
+                start = new Date(year, month - 1, day, 0, 0, 0, 0);
+              } else {
+                start = new Date(startDateValue);
+                start.setHours(0, 0, 0, 0);
+              }
+            }
+            
+            if (endDateValue instanceof Date) {
+              // Clone the date and set time to end of day in local timezone
+              end = new Date(endDateValue.getFullYear(), endDateValue.getMonth(), endDateValue.getDate(), 23, 59, 59, 999);
+            } else {
+              // For string dates, parse with explicit components
+              const endDateStr = String(endDateValue);
+              if (endDateStr.includes('/')) {
+                const [month, day, year] = endDateStr.split('/').map(Number);
+                end = new Date(year, month - 1, day, 23, 59, 59, 999);
+              } else if (endDateStr.includes('-')) {
+                const [year, month, day] = endDateStr.split('-').map(Number);
+                end = new Date(year, month - 1, day, 23, 59, 59, 999);
+              } else {
+                end = new Date(endDateValue);
+                end.setHours(23, 59, 59, 999);
+              }
+            }
+            
+            // Verify the dates are valid
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+              throw new Error(`Invalid date conversion - Start: ${startDateValue}, End: ${endDateValue}`);
+            }
+            
+            payPeriod = {
+              id: payPeriodsData[i][0],
+              name: payPeriodsData[i][1],
+              startDate: start,
+              endDate: end
+            };
+            
+            Logger.log("Pay period dates set - Start: " + 
+                      Utilities.formatDate(start, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss") + 
+                      ", End: " + 
+                      Utilities.formatDate(end, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss"));
+            break;
+          } catch (dateError) {
+            Logger.log("Error processing dates: " + dateError);
+            return { 
+              success: false, 
+              message: `Error processing dates for pay period ${payPeriodId}: ${dateError.message}` 
+            };
+          }
+        }
+      }
+      
+      if (!payPeriod) {
+        return { success: false, message: `Pay period ${payPeriodId} not found` };
+      }
+    } else {
+      // Handle custom date range
+      if (!startDate || !endDate) {
+        return { success: false, message: "Start date and end date are required for custom date range" };
+      }
+      
+      try {
+        // Parse start date properly based on format
+        if (typeof startDate === 'string') {
+          // Determine format and parse accordingly
+          if (startDate.includes('-') && !startDate.includes('T') && !startDate.includes(' ')) {
+            // Format: "YYYY-MM-DD"
+            const [year, month, day] = startDate.split('-').map(Number);
+            start = new Date(year, month - 1, day, 0, 0, 0, 0);
+          } else if (startDate.includes('/') && !startDate.includes(' ')) {
+            // Format: "MM/DD/YYYY"
+            const [month, day, year] = startDate.split('/').map(Number);
+            start = new Date(year, month - 1, day, 0, 0, 0, 0);
+          } else {
+            // Other formats, let JavaScript try to parse it
+            start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+          }
+        } else if (startDate instanceof Date) {
+          start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
+        } else {
+          throw new Error("Invalid start date format");
+        }
+        
+        // Parse end date properly based on format
+        if (typeof endDate === 'string') {
+          // Determine format and parse accordingly
+          if (endDate.includes('-') && !endDate.includes('T') && !endDate.includes(' ')) {
+            // Format: "YYYY-MM-DD"
+            const [year, month, day] = endDate.split('-').map(Number);
+            end = new Date(year, month - 1, day, 23, 59, 59, 999);
+          } else if (endDate.includes('/') && !endDate.includes(' ')) {
+            // Format: "MM/DD/YYYY"
+            const [month, day, year] = endDate.split('/').map(Number);
+            end = new Date(year, month - 1, day, 23, 59, 59, 999);
+          } else {
+            // Other formats, let JavaScript try to parse it
+            end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+          }
+        } else if (endDate instanceof Date) {
+          end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+        } else {
+          throw new Error("Invalid end date format");
+        }
+        
+        // Verify custom dates are valid
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+          throw new Error(`Invalid date conversion`);
+        }
+      } catch (error) {
+        return { 
+          success: false, 
+          message: `Error parsing custom date range: ${error.message}. Start: ${startDate}, End: ${endDate}` 
+        };
+      }
+      
+      // Log dates in local timezone format instead of ISO string (which is UTC)
+      Logger.log("Using custom date range - Local Start: " + 
+                Utilities.formatDate(start, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss") + 
+                ", Local End: " + 
+                Utilities.formatDate(end, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss"));
+    }
+
+    // Get time logs sheet
+    let timeLogsSheet = ss.getSheetByName('Time Logs');
+    if (!timeLogsSheet) {
+      // Try alternate sheet name
+      const altTimeLogsSheet = ss.getSheetByName('Time Logs Test');
+      if (!altTimeLogsSheet) {
+        return { success: false, message: "Time Logs sheet not found" };
+      }
+      timeLogsSheet = altTimeLogsSheet;
+    }
+
+    const timeLogsData = timeLogsSheet.getDataRange().getValues();
+    const allTimeLogs = [];
+    const incompleteLogs = [];
+    let totalHoursWorked = 0;
+    let totalRegularBreakTime = 0;
+    let totalLunchBreakTime = 0;
+    let totalMissedMinutes = 0;
+
+    // For debugging - log the date range in local timezone format
+    Logger.log("Looking for logs between: " + 
+               Utilities.formatDate(start, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss") + " and " + 
+               Utilities.formatDate(end, Session.getScriptTimeZone(), "MM/dd/yyyy HH:mm:ss"));
+
+    // First pass: collect all logs and identify incomplete ones
+    // Skip header row
+    for (let i = 1; i < timeLogsData.length; i++) {
+      // Skip empty rows or rows without employee ID
+      if (!timeLogsData[i][1]) continue;
+      
+      // Convert employee ID to string for comparison and remove decimal if present
+      const logEmployeeId = String(timeLogsData[i][1]).replace('.0', '');
+      
+      // Check if this log is for the requested employee
+      if (logEmployeeId !== employeeId) continue;
+      
+      // Get the log date from column C (index 2)
+      let logDate;
+      const rawLogDate = timeLogsData[i][2];
+      
+      // Ensure logDate is properly parsed in local timezone
+      if (rawLogDate instanceof Date) {
+        logDate = new Date(rawLogDate.getFullYear(), rawLogDate.getMonth(), rawLogDate.getDate());
+      } else {
+        // Try to parse the date string
+        try {
+          logDate = new Date(rawLogDate);
+          if (isNaN(logDate.getTime())) {
+            Logger.log(`Skipping row ${i+1}: Invalid date format in column C: ${rawLogDate}`);
+            continue;
+          }
+        } catch (e) {
+          Logger.log(`Skipping row ${i+1}: Error parsing date in column C: ${rawLogDate}`);
+          continue;
+        }
+      }
+      
+      // Normalized date comparison (ignoring time)
+      const normalizedLogDate = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
+      const normalizedStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const normalizedEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      
+      // Check if the log date falls within the date range
+      if (normalizedLogDate >= normalizedStart && normalizedLogDate <= normalizedEnd) {
+        Logger.log(`Found time log for employee ${employeeId} on ${logDate.toLocaleDateString()}`);
+        
+        const timeLog = {
+          id: timeLogsData[i][0],
+          date: Utilities.formatDate(logDate, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+          clockIn: formatTimeForDisplay(timeLogsData[i][3]),
+          clockOut: formatTimeForDisplay(timeLogsData[i][4]),
+          regularBreakStart1: formatTimeForDisplay(timeLogsData[i][5]),
+          regularBreakEnd1: formatTimeForDisplay(timeLogsData[i][6]),
+          regularBreakStart2: formatTimeForDisplay(timeLogsData[i][7]),
+          regularBreakEnd2: formatTimeForDisplay(timeLogsData[i][8]),
+          lunchBreakStart: formatTimeForDisplay(timeLogsData[i][9]),
+          lunchBreakEnd: formatTimeForDisplay(timeLogsData[i][10]),
+          hoursWorked: Number(timeLogsData[i][11]) || 0,
+          regularBreakTime: Number(timeLogsData[i][12]) || 0,
+          lunchBreakTime: Number(timeLogsData[i][13]) || 0,
+          netWorkingHours: Number(timeLogsData[i][14]) || 0,
+          status: timeLogsData[i][15] || "",
+          missedMinutes: Number(timeLogsData[i][25]) || 0,
+          rowIndex: i,
+          logDate: logDate
+        };
+        
+        allTimeLogs.push(timeLog);
+        
+        if (timeLog.status === "Incomplete") {
+          incompleteLogs.push(timeLog);
+        }
+        
+        totalHoursWorked += timeLog.hoursWorked;
+        totalRegularBreakTime += timeLog.regularBreakTime;
+        totalLunchBreakTime += timeLog.lunchBreakTime;
+        totalMissedMinutes += timeLog.missedMinutes;
+      }
+    }
+    
+    // Handle multiple incomplete logs if found
+    let warningMessage = null;
+    if (incompleteLogs.length > 1) {
+      incompleteLogs.sort((a, b) => b.logDate - a.logDate);
+      warningMessage = `Found ${incompleteLogs.length} incomplete time logs. Prioritizing the most recent one from ${incompleteLogs[0].date}.`;
+      Logger.log(warningMessage);
+    }
+    
+    // Sort all time logs by status and date
+    allTimeLogs.sort((a, b) => {
+      if (a.status === "Incomplete" && b.status !== "Incomplete") return -1;
+      if (a.status !== "Incomplete" && b.status === "Incomplete") return 1;
+      return b.logDate - a.logDate;
+    });
+    
+    // Remove internal properties before returning
+    const timeLogs = allTimeLogs.map(log => {
+      const { rowIndex, logDate, ...cleanLog } = log;
+      return cleanLog;
+    });
+    
+    // Calculate net working hours
+    const netWorkingHours = totalHoursWorked - totalRegularBreakTime - totalLunchBreakTime;
+    
+    // Prepare and return the final result
+    return {
+      success: true,
+      employeeId: employeeId,
+      payPeriod: {
+        id: payPeriodId || 'custom',
+        name: payPeriod ? payPeriod.name : 'Custom Date Range',
+        startDate: Utilities.formatDate(start, Session.getScriptTimeZone(), "MM/dd/yyyy"),
+        endDate: Utilities.formatDate(end, Session.getScriptTimeZone(), "MM/dd/yyyy")
+      },
+      timeLogs: timeLogs,
+      totals: {
+        hoursWorked: totalHoursWorked,
+        regularBreakTime: totalRegularBreakTime,
+        lunchBreakTime: totalLunchBreakTime,
+        netWorkingHours: netWorkingHours,
+        // Round missed minutes to 2 decimal places
+        missedMinutes: Math.round(totalMissedMinutes * 100) / 100
+      },
+      warning: warningMessage
+    };
+  } catch (error) {
+    Logger.log("Error in getEmployeeTimeReportCustom: " + error.toString());
+    return { success: false, message: error.toString() };
+  }
+}
+
+
+
+
+function getEmployeeTimeReportByPayPeriod(employeeId, payPeriodId) {
+  try {
+    Logger.log("Getting time report for employee ID: " + employeeId + " and pay period ID: " + payPeriodId);
+    
+    // Make sure employeeId is a string for consistent comparison
+    employeeId = String(employeeId).replace('.0', '');
+    
+    // Get the specified pay period
+    const payPeriodsSheet = ss.getSheetByName('Pay Periods');
+    if (!payPeriodsSheet) {
+      return { success: false, message: "Pay Periods sheet not found" };
+    }
+    
+    const payPeriodsData = payPeriodsSheet.getDataRange().getValues();
+    let payPeriod = null;
+    
+    // Find the specified pay period
+    for (let i = 1; i < payPeriodsData.length; i++) {
+      if (String(payPeriodsData[i][0]) === String(payPeriodId)) {
+        payPeriod = {
+          id: payPeriodsData[i][0],
+          name: payPeriodsData[i][1],
+          startDate: new Date(payPeriodsData[i][2]),
+          endDate: new Date(payPeriodsData[i][4])
+        };
+        break;
+      }
+    }
+    
+    if (!payPeriod) {
+      return { success: false, message: "Pay period not found" };
+    }
+    
+    // Get time logs for this employee within the pay period
+    const timeLogsSheet = ss.getSheetByName('Time Logs');
+    if (!timeLogsSheet) {
+      return { success: false, message: "Time Logs sheet not found" };
+    }
+    
+    const timeLogsData = timeLogsSheet.getDataRange().getValues();
+    const allTimeLogs = [];
+    let totalHoursWorked = 0;
+    let totalRegularBreakTime = 0;
+    let totalLunchBreakTime = 0;
+    let totalMissedMinutes = 0;
+    
+    // Process time logs
+    for (let i = 1; i < timeLogsData.length; i++) {
+      // Skip rows without employee ID
+      if (!timeLogsData[i][1]) continue;
+      
+      // Convert employee ID to string for comparison
+      const logEmployeeId = String(timeLogsData[i][1]).replace('.0', '');
+      
+      // Check if this log is for the requested employee
+      if (logEmployeeId !== employeeId) continue;
+      
+      // Get the log date from column C
+      const logDate = new Date(timeLogsData[i][2]);
+      
+      // Check if the log date falls within the pay period
+      if (logDate >= payPeriod.startDate && logDate <= payPeriod.endDate) {
+        // Round missed minutes to 2 decimal places for each log
+        const missedMinutes = Number(timeLogsData[i][25]) || 0;
+        const roundedMissedMinutes = Math.round(missedMinutes * 100) / 100;
+        
+        const timeLog = {
+          id: timeLogsData[i][0],
+          date: Utilities.formatDate(logDate, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+          clockIn: formatTimeForDisplay(timeLogsData[i][3]),
+          clockOut: formatTimeForDisplay(timeLogsData[i][4]),
+          hoursWorked: Number(timeLogsData[i][11]) || 0,
+          regularBreakTime: Number(timeLogsData[i][12]) || 0,
+          lunchBreakTime: Number(timeLogsData[i][13]) || 0,
+          netWorkingHours: Number(timeLogsData[i][14]) || 0,
+          status: timeLogsData[i][15] || "",
+          missedMinutes: roundedMissedMinutes
+        };
+        
+        allTimeLogs.push(timeLog);
+        
+        // Add to totals
+        totalHoursWorked += timeLog.hoursWorked;
+        totalRegularBreakTime += timeLog.regularBreakTime;
+        totalLunchBreakTime += timeLog.lunchBreakTime;
+        totalMissedMinutes += roundedMissedMinutes; // Add the rounded value
+      }
+    }
+    
+    // Sort logs by date (newest first)
+    allTimeLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Round the total missed minutes to 2 decimal places
+    const roundedTotalMissedMinutes = Math.round(totalMissedMinutes * 100) / 100;
+    
+    return {
+      success: true,
+      employeeId: employeeId,
+      payPeriod: {
+        id: payPeriod.id,
+        name: payPeriod.name,
+        startDate: Utilities.formatDate(payPeriod.startDate, Session.getScriptTimeZone(), "MM/dd/yyyy"),
+        endDate: Utilities.formatDate(payPeriod.endDate, Session.getScriptTimeZone(), "MM/dd/yyyy")
+      },
+      timeLogs: allTimeLogs,
+      totals: {
+        hoursWorked: totalHoursWorked,
+        regularBreakTime: totalRegularBreakTime,
+        lunchBreakTime: totalLunchBreakTime,
+        netWorkingHours: totalHoursWorked - totalRegularBreakTime - totalLunchBreakTime,
+        missedMinutes: roundedTotalMissedMinutes
+      }
+    };
+    
+  } catch (error) {
+    Logger.log("Error in getEmployeeTimeReportByPayPeriod: " + error.toString());
+    return { success: false, message: error.toString() };
+  }
+}
+
+
+
 // Helper function to format time values for display
 function formatTimeForDisplay(timeValue) {
   if (!timeValue) return "";
@@ -4246,5 +4704,388 @@ function grantEligibleEmployees80Hours(payPeriodId) {
   } catch (error) {
     Logger.log("Error in grantEligibleEmployees80Hours: " + error.toString());
     return { success: false, message: error.toString() };
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Gets the current PTO balance for an employee
+ * @param {string} employeeId - The employee's ID
+ * @return {Object} PTO balance information
+ */
+function getEmployeePTOBalance(employeeId) {
+  try {
+    const employeeSheet = ss.getSheetByName('Employee Master Data');
+    const employeeData = employeeSheet.getDataRange().getValues();
+    
+    // Skip header row and find employee
+    for (let i = 1; i < employeeData.length; i++) {
+      if (employeeData[i][0] == employeeId) {
+        return {
+          success: true,
+          balance: employeeData[i][13], // Current PTO Balance column
+          accrualRate: employeeData[i][12] // PTO Accrual Rate column
+        };
+      }
+    }
+    
+    return { success: false, message: "Employee not found" };
+  } catch (e) {
+    Logger.log("Error getting PTO balance: " + e.toString());
+    return { success: false, message: "Error retrieving PTO balance" };
+  }
+}
+
+
+/**
+ * Submits a PTO request
+ * @param {Object} ptoRequest - The PTO request data
+ * @return {Object} Result of the operation
+ */
+function submitPTORequest(ptoRequest) {
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      return { success: false, message: "Failed to initialize spreadsheet" };
+    }
+    
+    // Try both possible sheet names
+    let ptoRequestsSheet = ss.getSheetByName('PTO Requests');
+    if (!ptoRequestsSheet) {
+      // Try alternative names
+      const possibleNames = ['PTO Requests', 'PTORequests', 'PTO_Requests', 'PTO'];
+      for (const name of possibleNames) {
+        ptoRequestsSheet = ss.getSheetByName(name);
+        if (ptoRequestsSheet) break;
+      }
+      
+      if (!ptoRequestsSheet) {
+        Logger.log("PTO Requests sheet not found. Creating new sheet.");
+        // Create the sheet if it doesn't exist
+        ptoRequestsSheet = ss.insertSheet('PTO Requests');
+        
+        // Add headers based on your CSV structure
+        ptoRequestsSheet.appendRow([
+          "Request ID", 
+          "Employee ID", 
+          "Employee Name", 
+          "Request Date", 
+          "Start Date", 
+          "End Date", 
+          "Number of Hours Requested", 
+          "Reason", 
+          "Status", 
+          "Manager Comments", 
+          "Calendar Event ID (for Google Calendar sync)", 
+          "Email Notification Status",
+          "Employee Notes" // Added Employee Notes header
+        ]);
+      }
+    }
+    
+    const employeeSheet = ss.getSheetByName('Employee Master Data');
+    
+    // Generate request ID
+    const today = new Date();
+    const requestId = "PTO" + today.getTime().toString().slice(-8);
+    
+    // Get employee name, email, and manager email
+    const employeeData = employeeSheet.getDataRange().getValues();
+    let employeeName = "";
+    let employeeEmail = ""; // Added employee email variable
+    let managerEmail = "";
+    let currentPTOBalance = 0;
+    
+    for (let i = 1; i < employeeData.length; i++) {
+      if (employeeData[i][0] == ptoRequest.employeeId) {
+        employeeName = employeeData[i][1] + " " + employeeData[i][2]; // First + Last name
+        employeeEmail = employeeData[i][4]; // Employee Email column E
+        managerEmail = employeeData[i][6]; // Manager Email column
+        currentPTOBalance = employeeData[i][13]; // Current PTO Balance column
+        break;
+      }
+    }
+    
+    // Check if employee has enough PTO balance
+    if (currentPTOBalance < ptoRequest.totalHours) {
+      return { 
+        success: false, 
+        message: "Insufficient PTO balance. You have " + currentPTOBalance + 
+                " hours available, but requested " + ptoRequest.totalHours + " hours." 
+      };
+    }
+    
+    // Format the request date
+    const requestDate = Utilities.formatDate(today, Session.getScriptTimeZone(), "MM/dd/yyyy");
+    
+    // Log what we're about to insert
+    Logger.log("Inserting PTO request with ID: " + requestId);
+    Logger.log("Employee ID: " + ptoRequest.employeeId);
+    Logger.log("Employee Name: " + employeeName);
+    Logger.log("Request Date: " + requestDate);
+    Logger.log("Start Date: " + ptoRequest.startDate);
+    Logger.log("End Date: " + ptoRequest.endDate);
+    Logger.log("Hours: " + ptoRequest.totalHours);
+    Logger.log("Type: " + ptoRequest.requestType);
+    Logger.log("Notes: " + ptoRequest.notes); // Log notes
+    
+    // Create Google Calendar event
+    let calendarEventId = "";
+    try {
+      const calendarId = "0c9bf77626ae7467b6e1fec960ed070161a164e4921905f3333282f003be419f@group.calendar.google.com";
+      
+      // Parse dates for calendar event - with timezone handling
+      Logger.log("Parsing start date: " + ptoRequest.startDate);
+      Logger.log("Parsing end date: " + ptoRequest.endDate);
+      
+      // Properly parse the date strings with timezone handling
+      let startDate, endDate;
+      
+      // Function to parse date string to Date object with proper timezone handling
+      function parseDate(dateString) {
+        // For YYYY-MM-DD format
+        if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = dateString.split('-').map(num => parseInt(num, 10));
+          // Create date using year, month (0-indexed), day
+          return new Date(year, month - 1, day);
+        }
+        // For MM/DD/YYYY format
+        else if (dateString.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+          const [month, day, year] = dateString.split('/').map(num => parseInt(num, 10));
+          return new Date(year, month - 1, day);
+        }
+        // If it's already a Date object
+        else if (dateString instanceof Date) {
+          return new Date(dateString);
+        }
+        // Default fallback
+        else {
+          // Try to parse as is, but this might have timezone issues
+          const date = new Date(dateString);
+          // Adjust for timezone if needed
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        }
+      }
+      
+      startDate = parseDate(ptoRequest.startDate);
+      endDate = parseDate(ptoRequest.endDate);
+      
+      // Log the parsed dates for debugging
+      Logger.log("Parsed start date: " + startDate);
+      Logger.log("Parsed end date: " + endDate);
+      
+      // If end date is the same as start date, make it an all-day event for that day
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // For all-day events, the end date should be the next day for Google Calendar
+        endDate.setDate(endDate.getDate() + 1);
+      } else {
+        // For multi-day events, add one day to end date to make it inclusive
+        endDate.setDate(endDate.getDate() + 1);
+      }
+      
+      // Create event title and description
+      const eventTitle = `PTO: ${employeeName} - ${ptoRequest.requestType}`;
+      const eventDescription = `PTO Request Details:
+Employee: ${employeeName}
+Type: ${ptoRequest.requestType}
+Hours: ${ptoRequest.totalHours}
+Request ID: ${requestId}
+Status: Pending
+${ptoRequest.notes ? "Notes: " + ptoRequest.notes : ""}`;
+      
+      // Create calendar event with yellow color (color ID 5)
+      const event = CalendarApp.getCalendarById(calendarId).createAllDayEvent(
+        eventTitle,
+        startDate,
+        endDate,
+        {
+          description: eventDescription
+        }
+      );
+      
+      // Set the event color to yellow (color ID 5)
+      event.setColor(CalendarApp.EventColor.YELLOW);
+      
+      // Get the event ID for reference
+      calendarEventId = event.getId();
+      Logger.log("Created calendar event with ID: " + calendarEventId);
+      Logger.log("Event start date: " + event.getAllDayStartDate());
+      Logger.log("Event end date: " + event.getAllDayEndDate());
+      Logger.log("Event color set to yellow");
+    } catch (calendarError) {
+      Logger.log("Error creating calendar event: " + calendarError.toString());
+      // Continue with request submission even if calendar event creation fails
+    }
+    
+    // Add new PTO request - match the exact column structure from your CSV
+    ptoRequestsSheet.appendRow([
+      requestId,                  // Request ID
+      ptoRequest.employeeId,      // Employee ID
+      employeeName,               // Employee Name
+      requestDate,                // Request Date
+      ptoRequest.startDate,       // Start Date
+      ptoRequest.endDate,         // End Date
+      ptoRequest.totalHours,      // Number of Hours Requested
+      ptoRequest.requestType,     // Reason
+      "Pending",                  // Status
+      "",                         // Manager Comments
+      calendarEventId,            // Calendar Event ID
+      "",                         // Email Notification Status
+      ptoRequest.notes || ""      // Employee Notes - Column N
+    ]);
+    
+    // Email notification section - updated to include additional recipient
+    try {
+      // Calendar link for employee email
+      const calendarLink = "https://calendar.google.com/calendar/u/0?cid=MGM5YmY3NzYyNmFlNzQ2N2I2ZTFmZWM5NjBlZDA3MDE2MWExNjRlNDkyMTkwNWYzMzMzMjgyZjAwM2JlNDE5ZkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t";
+      
+      // Prepare email content for manager
+      const emailSubject = "New PTO Request: " + employeeName;
+      const emailBody = "A new PTO request has been submitted:\n\n" +
+                "Employee: " + employeeName + "\n" +
+                "Request Type: " + ptoRequest.requestType + "\n" +
+                "Dates: " + ptoRequest.startDate + " to " + ptoRequest.endDate + "\n" +
+                "Total Hours: " + ptoRequest.totalHours + "\n" +
+                (ptoRequest.notes ? "Notes: " + ptoRequest.notes + "\n\n" : "\n") +
+                "Please log in to the manager dashboard to approve or deny this request.";
+      
+      // Additional email recipient
+      const additionalEmail = "humboldtmachinemanager@gmail.com";
+      
+      // Send to manager if available
+      if (managerEmail) {
+        try {
+          MailApp.sendEmail({
+            to: managerEmail,
+            subject: emailSubject,
+            body: emailBody
+          });
+          Logger.log("Email sent to manager: " + managerEmail);
+        } catch (emailError) {
+          Logger.log("Error sending email to manager: " + emailError.toString());
+          // Continue with other notifications even if this one fails
+        }
+      }
+      
+      // Always send to the additional email address
+      try {
+        MailApp.sendEmail({
+          to: additionalEmail,
+          subject: emailSubject,
+          body: emailBody
+        });
+        Logger.log("Email sent to additional recipient: " + additionalEmail);
+      } catch (emailError) {
+        Logger.log("Error sending email to additional recipient: " + emailError.toString());
+      }
+      
+// Send confirmation email to employee
+if (employeeEmail) {
+  try {
+    // Prepare email content for employee with updated subject including dates
+    const employeeEmailSubject = `Your PTO Request Confirmation: ${ptoRequest.startDate} to ${ptoRequest.endDate}`;
+    const employeeEmailBody = "Your PTO request has been submitted successfully:\n\n" +
+              "Request Type: " + ptoRequest.requestType + "\n" +
+              "Dates: " + ptoRequest.startDate + " to " + ptoRequest.endDate + "\n" +
+              "Total Hours: " + ptoRequest.totalHours + "\n" +
+              (ptoRequest.notes ? "Notes: " + ptoRequest.notes + "\n\n" : "\n") +
+              "Your request is now pending approval. You will be notified when your request is approved or denied.";
+    
+    MailApp.sendEmail({
+      to: employeeEmail,
+      subject: employeeEmailSubject,
+      body: employeeEmailBody
+    });
+    Logger.log("Confirmation email sent to employee: " + employeeEmail);
+  } catch (emailError) {
+    Logger.log("Error sending confirmation email to employee: " + emailError.toString());
+    // Continue even if employee email fails
+  }
+} else {
+  Logger.log("No employee email found, skipping confirmation email");
+}
+
+      
+    } catch (emailError) {
+      Logger.log("Error in email notification process: " + emailError.toString());
+      // Continue with request submission even if email fails
+    }
+    
+    return { 
+      success: true, 
+      message: "PTO request submitted successfully", 
+      requestId: requestId 
+    };
+  } catch (e) {
+    Logger.log("Error submitting PTO request: " + e.toString());
+    return { success: false, message: "Error submitting request: " + e.toString() };
+  }
+}
+
+
+
+/**
+ * Gets the employee's PTO balance including pending requests
+ * @param {string} employeeId - The employee's ID
+ * @return {Object} PTO balance information with pending hours
+ */
+function getEmployeePTOBalanceWithPending(employeeId) {
+  try {
+    // Get current PTO balance
+    const balanceResult = getEmployeePTOBalance(employeeId);
+    if (!balanceResult.success) {
+      return balanceResult;
+    }
+    
+    // Calculate pending PTO hours
+    const ptoRequestsSheet = ss.getSheetByName('PTO Requests');
+    if (!ptoRequestsSheet) {
+      // If the sheet doesn't exist, return just the current balance
+      return {
+        success: true,
+        balance: balanceResult.balance,
+        pendingHours: 0,
+        balanceAfterPending: balanceResult.balance
+      };
+    }
+    
+    const ptoRequestsData = ptoRequestsSheet.getDataRange().getValues();
+    let pendingHours = 0;
+    
+    // Skip header row and find pending requests for this employee
+    for (let i = 1; i < ptoRequestsData.length; i++) {
+      // Check if this row is for the current employee and has "Pending" status
+      if (ptoRequestsData[i][1] == employeeId && ptoRequestsData[i][8] === "Pending") {
+        // Add the requested hours to pending total
+        pendingHours += Number(ptoRequestsData[i][6]) || 0;
+      }
+    }
+    
+    // Calculate balance after pending requests
+    const balanceAfterPending = balanceResult.balance - pendingHours;
+    
+    return {
+      success: true,
+      balance: balanceResult.balance,
+      pendingHours: pendingHours,
+      balanceAfterPending: balanceAfterPending
+    };
+  } catch (e) {
+    Logger.log("Error getting PTO balance with pending: " + e.toString());
+    return { success: false, message: "Error retrieving PTO balance" };
   }
 }

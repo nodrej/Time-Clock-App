@@ -65,9 +65,9 @@
     
     .card {
       background-color: #333;
-      border-radius: 15px;
-      padding: 20px;
-      width: 280px;
+      border-radius: 10px;
+      padding: 10px;
+      width: 225px;
       height: 170px; /* Increased height to accommodate the timer */
       display: flex;
       flex-direction: column;
@@ -77,11 +77,25 @@
       transition: transform 0.3s ease, background-color 0.5s ease;
     }
     
+    /* Compact card style for working employees */
+    .card-compact {
+      height: 120px; /* Reduced height for working employees */
+      padding: 15px;
+      width: 225px; /* Slightly narrower */
+    }
+    
     .status-indicator {
       width: 40px;
       height: 40px;
       border-radius: 50%;
       margin-bottom: 15px;
+    }
+    
+    /* Smaller status indicator for compact cards */
+    .card-compact .status-indicator {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 10px;
     }
     
     .clocked-in {
@@ -101,10 +115,21 @@
       margin-bottom: 5px;
     }
     
+    /* Smaller font for compact cards */
+    .card-compact .employee-name {
+      font-size: 34px;
+      margin-bottom: 3px;
+    }
+    
     .employee-department {
       font-size: 18px;
       color: #aaa;
       text-align: center;
+    }
+    
+    /* Smaller font for compact cards */
+    .card-compact .employee-department {
+      font-size: 16px;
     }
     
     .status-text {
@@ -375,7 +400,8 @@
         
         if (employee.status === 'Clocked In') {
           statusIndicator.classList.add('clocked-in');
-          statusText.innerText = 'Working';
+          // Add compact class to working employee cards
+          card.classList.add('card-compact');
           clockedInContainer.appendChild(card);
           clockedInCount++;
           
@@ -445,7 +471,11 @@
         card.appendChild(statusIndicator);
         card.appendChild(nameElement);
         card.appendChild(departmentElement);
-        card.appendChild(statusText);
+        
+        // Only add status text to cards for employees on break
+        if (employee.status.includes('Break')) {
+          card.appendChild(statusText);
+        }
       });
       
       // Show message if no employees in a category
