@@ -2,7 +2,7 @@
 const SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
 const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-//T
+
 //Testing
 //Testing Testing
 //Testing testing one
