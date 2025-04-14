@@ -12,10 +12,6 @@
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
-  <!-- Calendar -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-  
   <!-- Date picker -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -244,28 +240,6 @@
     .badge-denied {
       background-color: #ef4444;
       color: white;
-    }
-
-    /* Calendar styling */
-    .calendar-container {
-      height: 600px;
-      margin-bottom: 20px;
-    }
-
-    .fc-event {
-      cursor: pointer;
-    }
-
-    .fc-event.approved {
-      background-color: #10b981;
-    }
-
-    .fc-event.pending {
-      background-color: #f59e0b;
-    }
-
-    .fc-event.denied {
-      background-color: #ef4444;
     }
 
     /* Tab content containers */
@@ -657,17 +631,18 @@
           </div>
         </div>
         
-        <!-- PTO Calendar View Tab -->
-        <div id="pto-calendar-tab" class="tab-content">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>PTO Calendar</h2>
-            <div>
-              <select id="calendar-department-filter" class="form-select d-inline-block" style="width: auto;">
-                <option value="all">All Departments</option>
-                <!-- Will be populated dynamically -->
-              </select>
-            </div>
-          </div>
+<!-- PTO Calendar View Tab -->
+<div id="pto-calendar-tab" class="tab-content">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>PTO Calendar</h2>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <iframe src="https://calendar.google.com/calendar/embed?src=0c9bf77626ae7467b6e1fec960ed070161a164e4921905f3333282f003be419f%40group.calendar.google.com&ctz=America%2FDenver" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+    </div>
+  </div>
+</div>
           
           <div class="card">
             <div class="card-body">
@@ -908,53 +883,167 @@
 
   <!-- JavaScript -->
   <script>
-    // Global variables
-    let ptoRequests = [];
-    let employees = [];
-    let departments = [];
-    let calendar;
+   // Global variables
+let ptoRequests = [];
+let employees = [];
+let departments = [];
 
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      // Tab navigation
-      document.querySelectorAll('.sidebar-item').forEach(item => {
-        item.addEventListener('click', function() {
-          // Remove active class from all sidebar items
-          document.querySelectorAll('.sidebar-item').forEach(i => {
-            i.classList.remove('active');
-          });
-          
-          // Add active class to clicked item
-          this.classList.add('active');
-          
-          // Hide all tab content
-          document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-          });
-          
-          // Show selected tab
-          const tabId = this.getAttribute('data-tab') + '-tab';
-          document.getElementById(tabId).classList.add('active');
-          
-          // Special handling for calendar tab - render calendar when tab is shown
-          if (tabId === 'pto-calendar-tab' && !calendar) {
-            initializeCalendar();
-          }
-        });
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab navigation
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active class from all sidebar items
+      document.querySelectorAll('.sidebar-item').forEach(i => {
+        i.classList.remove('active');
       });
       
-      // Initialize date pickers
-      initializeDatePickers();
+      // Add active class to clicked item
+      this.classList.add('active');
       
-      // Load initial data
-      loadEmployees();
-      loadPTORequests();
-      loadPTOBalances();
-      loadAccrualSettings();
+      // Hide all tab content
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
       
-      // Set up event listeners
-      setupEventListeners();
+      // Show selected tab
+      const tabId = this.getAttribute('data-tab') + '-tab';
+      document.getElementById(tabId).classList.add('active');
+      
+
     });
+  });
+  
+  // Initialize date pickers
+  initializeDatePickers();
+  
+  // Load initial data
+  loadEmployees();
+  loadPTORequests();
+  loadPTOBalances();
+  loadAccrualSettings();
+  
+  // Set up event listeners
+  setupEventListeners();
+});
+
+
+function setupEventListeners() {
+  // Filter reset button
+  document.getElementById('reset-filters').addEventListener('click', function() {
+    document.getElementById('search-requests').value = '';
+    document.getElementById('status-filter').value = 'all';
+    document.getElementById('employee-filter').value = 'all';
+    document.getElementById('date-range-filter').value = '';
+    updateRequestsTable();
+  });
+  
+  // Balance filter reset button
+  document.getElementById('reset-balance-filters').addEventListener('click', function() {
+    document.getElementById('search-balances').value = '';
+    document.getElementById('department-filter').value = 'all';
+    loadPTOBalances();
+  });
+  
+  // Search functionality
+  document.getElementById('search-requests').addEventListener('input', updateRequestsTable);
+  document.getElementById('status-filter').addEventListener('change', updateRequestsTable);
+  document.getElementById('employee-filter').addEventListener('change', updateRequestsTable);
+  document.getElementById('date-range-filter').addEventListener('change', updateRequestsTable);
+  
+  // Balance search
+  document.getElementById('search-balances').addEventListener('input', function() {
+    filterBalances();
+  });
+  
+  document.getElementById('department-filter').addEventListener('change', function() {
+    filterBalances();
+  });
+  
+  // Select all requests checkbox
+  document.getElementById('select-all-requests').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.request-checkbox');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = this.checked;
+    });
+    updateSelectedCount();
+  });
+  
+  // Bulk action button
+  document.getElementById('bulk-action-btn').addEventListener('click', function() {
+    updateSelectedCount();
+    // Open bulk actions modal
+    const modal = new bootstrap.Modal(document.getElementById('bulk-actions-modal'));
+    modal.show();
+  });
+  
+  // Apply bulk action
+  document.getElementById('apply-bulk-action').addEventListener('click', function() {
+    applyBulkAction();
+  });
+  
+  // Report period change
+  document.getElementById('report-period').addEventListener('change', function() {
+    const customDateRange = document.getElementById('custom-date-range');
+    if (this.value === 'custom') {
+      customDateRange.classList.remove('d-none');
+    } else {
+      customDateRange.classList.add('d-none');
+    }
+  });
+  
+  // Generate report button
+  document.getElementById('generate-report').addEventListener('click', function() {
+    generateReport();
+  });
+  
+  // Add tenure rule button
+  document.getElementById('add-tenure-rule').addEventListener('click', function() {
+    addTenureRule();
+  });
+  
+  // Add department rule button
+  document.getElementById('add-department-rule').addEventListener('click', function() {
+    addDepartmentRule();
+  });
+  
+  // Save accrual settings button
+  document.getElementById('save-accrual-settings').addEventListener('click', function() {
+    saveAccrualSettings();
+  });
+  
+  // Adjust balance button
+  document.getElementById('adjust-balance-btn').addEventListener('click', function() {
+    // Open modal with blank form
+    openAdjustBalanceModal();
+  });
+  
+  // Save adjustment button
+  document.getElementById('save-adjustment').addEventListener('click', function() {
+    saveBalanceAdjustment();
+  });
+    
+  // Refresh PTO requests button
+  document.getElementById('refresh-pto-requests').addEventListener('click', function() {
+    loadPTORequests();
+  });
+  
+  // Export balances button
+  document.getElementById('export-balances-csv').addEventListener('click', function() {
+    exportBalancesToCSV();
+  });
+  
+  // Export report button
+  document.getElementById('export-report').addEventListener('click', function() {
+    exportReportToCSV();
+  });
+  
+  // Print report button
+  document.getElementById('print-report').addEventListener('click', function() {
+    printReport();
+  });
+}
 
     function showAlert(message, type = 'success') {
       const alertsContainer = document.getElementById('alerts-container');
@@ -993,41 +1082,7 @@
       });
     }
 
-    function initializeCalendar() {
-      const calendarEl = document.getElementById('pto-calendar');
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek'
-        },
-        events: getCalendarEvents(),
-        eventClick: function(info) {
-          openRequestDetails(info.event.extendedProps.requestId);
-        },
-        eventClassNames: function(info) {
-          return [info.event.extendedProps.status.toLowerCase()];
-        }
-      });
-      calendar.render();
-    }
-
-    function getCalendarEvents() {
-      // Convert PTO requests to calendar events format
-      return ptoRequests.map(request => {
-        return {
-          title: `${request.employeeName} (${request.hours}h)`,
-          start: request.startDate,
-          end: request.endDate,
-          extendedProps: {
-            requestId: request.requestId,
-            status: request.status
-          }
-        };
-      });
-    }
-
+  
     function loadEmployees() {
       google.script.run
         .withSuccessHandler(onEmployeesLoaded)
@@ -1380,125 +1435,7 @@
       });
     }
 
-    function setupEventListeners() {
-      // Filter reset button
-      document.getElementById('reset-filters').addEventListener('click', function() {
-        document.getElementById('search-requests').value = '';
-        document.getElementById('status-filter').value = 'all';
-        document.getElementById('employee-filter').value = 'all';
-        document.getElementById('date-range-filter').value = '';
-        updateRequestsTable();
-      });
-      
-      // Balance filter reset button
-      document.getElementById('reset-balance-filters').addEventListener('click', function() {
-        document.getElementById('search-balances').value = '';
-        document.getElementById('department-filter').value = 'all';
-        loadPTOBalances();
-      });
-      
-      // Search functionality
-      document.getElementById('search-requests').addEventListener('input', updateRequestsTable);
-      document.getElementById('status-filter').addEventListener('change', updateRequestsTable);
-      document.getElementById('employee-filter').addEventListener('change', updateRequestsTable);
-      document.getElementById('date-range-filter').addEventListener('change', updateRequestsTable);
-      
-      // Balance search
-      document.getElementById('search-balances').addEventListener('input', function() {
-        filterBalances();
-      });
-      
-      document.getElementById('department-filter').addEventListener('change', function() {
-        filterBalances();
-      });
-      
-      // Select all requests checkbox
-      document.getElementById('select-all-requests').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.request-checkbox');
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = this.checked;
-        });
-        updateSelectedCount();
-      });
-      
-      // Bulk action button
-      document.getElementById('bulk-action-btn').addEventListener('click', function() {
-        updateSelectedCount();
-        // Open bulk actions modal
-        const modal = new bootstrap.Modal(document.getElementById('bulk-actions-modal'));
-        modal.show();
-      });
-      
-      // Apply bulk action
-      document.getElementById('apply-bulk-action').addEventListener('click', function() {
-        applyBulkAction();
-      });
-      
-      // Report period change
-      document.getElementById('report-period').addEventListener('change', function() {
-        const customDateRange = document.getElementById('custom-date-range');
-        if (this.value === 'custom') {
-          customDateRange.classList.remove('d-none');
-        } else {
-          customDateRange.classList.add('d-none');
-        }
-      });
-      
-      // Generate report button
-      document.getElementById('generate-report').addEventListener('click', function() {
-        generateReport();
-      });
-      
-      // Add tenure rule button
-      document.getElementById('add-tenure-rule').addEventListener('click', function() {
-        addTenureRule();
-      });
-      // Add department rule button
-      document.getElementById('add-department-rule').addEventListener('click', function() {
-        addDepartmentRule();
-      });
-      
-      // Save accrual settings button
-      document.getElementById('save-accrual-settings').addEventListener('click', function() {
-        saveAccrualSettings();
-      });
-      
-      // Adjust balance button
-      document.getElementById('adjust-balance-btn').addEventListener('click', function() {
-        // Open modal with blank form
-        openAdjustBalanceModal();
-      });
-      
-      // Save adjustment button
-      document.getElementById('save-adjustment').addEventListener('click', function() {
-        saveBalanceAdjustment();
-      });
-      
-      // Calendar department filter
-      document.getElementById('calendar-department-filter').addEventListener('change', function() {
-        filterCalendarEvents();
-      });
-      
-      // Refresh PTO requests button
-      document.getElementById('refresh-pto-requests').addEventListener('click', function() {
-        loadPTORequests();
-      });
-      
-      // Export balances button
-      document.getElementById('export-balances-csv').addEventListener('click', function() {
-        exportBalancesToCSV();
-      });
-      
-      // Export report button
-      document.getElementById('export-report').addEventListener('click', function() {
-        exportReportToCSV();
-      });
-      
-      // Print report button
-      document.getElementById('print-report').addEventListener('click', function() {
-        printReport();
-      });
-    }
+
 
     function updateSelectedCount() {
       const selectedCheckboxes = document.querySelectorAll('.request-checkbox:checked');
@@ -1909,39 +1846,6 @@
       });
     }
 
-    function filterCalendarEvents() {
-      const departmentFilter = document.getElementById('calendar-department-filter').value;
-      
-      if (!calendar) return;
-      
-      // Clear all events
-      calendar.removeAllEvents();
-      
-      // Filter events by department
-      let filteredEvents = ptoRequests;
-      
-      if (departmentFilter !== 'all') {
-        filteredEvents = ptoRequests.filter(request => {
-          const employee = employees.find(e => e.employeeId === request.employeeId);
-          return employee && employee.department === departmentFilter;
-        });
-      }
-      
-      // Add filtered events to calendar
-      const calendarEvents = filteredEvents.map(request => {
-        return {
-          title: `${request.employeeName} (${request.hours}h)`,
-          start: request.startDate,
-          end: request.endDate,
-          extendedProps: {
-            requestId: request.requestId,
-            status: request.status
-          }
-        };
-      });
-      
-      calendar.addEventSource(calendarEvents);
-    }
 
     function generateReport() {
       const reportType = document.getElementById('report-type').value;
@@ -2270,6 +2174,7 @@ function hideLoading() {
     loadingOverlay.style.display = 'none';
   }
 }
+
 
 
   </script>

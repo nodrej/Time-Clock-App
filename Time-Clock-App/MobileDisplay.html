@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Status Board</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      color: white;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      background-color: #333;
+      color: white;
+      padding: 15px 10px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      border-bottom: 2px solid #444;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    
+    .header-title {
+      margin-bottom: 10px;
+    }
+    
+    .header-bottom {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .clock {
+      font-size: 20px;
+      font-weight: normal;
+    }
+    
+    /* Refresh countdown styles */
+    .refresh-countdown {
+      font-size: 14px;
+      font-weight: normal;
+      color: #aaa;
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .refresh-countdown-number {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    
+    .container {
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    
+    .card {
+      background-color: #333;
+      border-radius: 10px;
+      padding: 10px;
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease, background-color 0.5s ease;
+      margin-bottom: 10px;
+    }
+    
+    /* Compact card style for working employees */
+    .card-compact {
+      padding: 12px;
+      min-height: 80px;
+    }
+    
+    .status-indicator {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    
+    /* Smaller status indicator for compact cards */
+    .card-compact .status-indicator {
+      width: 25px;
+      height: 25px;
+      margin-bottom: 8px;
+    }
+    
+    .clocked-in {
+      background-color: #4CAF50;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
+    }
+    
+    .on-break {
+      background-color: #FFC107;
+      box-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
+    }
+    
+    .employee-name {
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    
+    /* Smaller font for compact cards */
+    .card-compact .employee-name {
+      font-size: 20px;
+      margin-bottom: 3px;
+    }
+    
+    .employee-department {
+      font-size: 16px;
+      color: #aaa;
+      text-align: center;
+    }
+    
+    /* Smaller font for compact cards */
+    .card-compact .employee-department {
+      font-size: 14px;
+    }
+    
+    .status-text {
+      font-size: 18px;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    
+    .break-timer {
+      font-size: 26px;
+      color: #ffffff;
+      margin-top: 8px;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    
+    /* Timer warning states */
+    .timer-warning {
+      color: #FF9800;
+      animation: pulse-yellow 1.5s infinite;
+    }
+    
+    .timer-danger {
+      color: #F44336;
+      animation: pulse-red 1.5s infinite;
+    }
+    
+    /* Card flashing effect for exceeded time */
+    .card-flashing {
+      animation: card-flash 1.5s infinite;
+    }
+    
+    @keyframes card-flash {
+      0% { background-color: #333; }
+      50% { background-color: rgba(244, 67, 54, 0.3); }
+      100% { background-color: #333; }
+    }
+    
+    @keyframes pulse-yellow {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    
+    @keyframes pulse-red {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    
+    .section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 22px;
+      margin-left: 15px;
+      margin-bottom: 10px;
+      color: #ccc;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+    
+    .no-employees {
+      font-size: 18px;
+      color: #888;
+      text-align: center;
+      margin: 20px 0;
+      padding: 0 10px;
+    }
+    
+    .refresh-message {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 100;
+    }
+    
+    .show-message {
+      opacity: 1;
+    }
+    
+    /* Media queries for responsive design */
+    @media (max-width: 480px) {
+      .header {
+        font-size: 20px;
+        padding: 10px 5px;
+      }
+      
+      .clock {
+        font-size: 18px;
+      }
+      
+      .refresh-countdown {
+        font-size: 12px;
+        padding: 2px 8px;
+      }
+      
+      .section-title {
+        font-size: 20px;
+        margin-left: 10px;
+      }
+      
+      .card {
+        padding: 8px;
+      }
+      
+      .employee-name {
+        font-size: 20px;
+      }
+      
+      .employee-department {
+        font-size: 14px;
+      }
+      
+      .break-timer {
+        font-size: 22px;
+      }
+    }
+    
+    /* For very small screens */
+    @media (max-width: 320px) {
+      .header-title {
+        font-size: 18px;
+      }
+      
+      .clock {
+        font-size: 16px;
+      }
+      
+      .employee-name {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-title">Employee Status Board</div>
+    <div class="header-bottom">
+      <div class="refresh-countdown" id="refreshCountdown">
+        Refresh: <span class="refresh-countdown-number" id="countdownTimer">30</span>s
+      </div>
+      <div class="clock" id="clock">00:00:00</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">Currently Working</h2>
+    <div class="container" id="clockedInContainer">
+      <div class="no-employees">Loading employee data...</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2 class="section-title">On Break</h2>
+    <div class="container" id="onBreakContainer">
+      <div class="no-employees">Loading employee data...</div>
+    </div>
+  </div>
+  
+  <div class="refresh-message" id="refreshMessage">Refreshing data...</div>
+  
+  <script>
+    // Store break timers so we can update them
+    const breakTimers = {};
+    const breakTimeouts = {
+      'Regular Break': 15, // 15 minutes for regular break
+      'Lunch Break': 30    // 30 minutes for lunch break
+    };
+    
+    // Warning thresholds (5 minutes before time limit)
+    const warningThresholds = {
+      'Regular Break': 10, // 10 minutes for regular break (5 minutes left)
+      'Lunch Break': 25    // 25 minutes for lunch break (5 minutes left)
+    };
+    
+    // Keep track of employees we've seen on break and their start times
+    let knownBreakEmployees = {};
+    
+    // Refresh interval in seconds
+    const REFRESH_INTERVAL = 60;
+    let countdownValue = REFRESH_INTERVAL;
+    
+    // Update clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').innerText = now.toLocaleTimeString();
+    }
+    
+    // Update refresh countdown
+    function updateRefreshCountdown() {
+      document.getElementById('countdownTimer').innerText = countdownValue;
+      
+      // Change color when countdown is low
+      if (countdownValue <= 5) {
+        document.getElementById('countdownTimer').style.color = '#F44336'; // Red for last 5 seconds
+      } else if (countdownValue <= 10) {
+        document.getElementById('countdownTimer').style.color = '#FF9800'; // Orange for last 10 seconds
+      } else {
+        document.getElementById('countdownTimer').style.color = '#4CAF50'; // Green otherwise
+      }
+      
+      countdownValue--;
+      
+      // Reset countdown when it reaches zero
+      if (countdownValue < 0) {
+        countdownValue = REFRESH_INTERVAL;
+      }
+    }
+    
+    // Format elapsed time as MM:SS
+    function formatElapsedTime(startTime) {
+      const now = new Date();
+      const elapsed = Math.floor((now - startTime) / 1000); // seconds
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Update all break timers
+    function updateBreakTimers() {
+      for (const employeeId in breakTimers) {
+        const timerElement = document.getElementById(`break-timer-${employeeId}`);
+        const cardElement = timerElement ? timerElement.closest('.card') : null;
+        
+        if (timerElement && cardElement && breakTimers[employeeId] && breakTimers[employeeId].startTime) {
+          // Calculate elapsed time
+          const now = new Date();
+          const elapsedMs = now - breakTimers[employeeId].startTime;
+          const elapsedMinutes = Math.floor(elapsedMs / 60000);
+          const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
+          
+          // Format display time
+          const timeDisplay = `${elapsedMinutes}:${elapsedSeconds.toString().padStart(2, '0')}`;
+          timerElement.innerText = timeDisplay;
+          
+          // Reset any existing classes
+          timerElement.classList.remove('timer-warning', 'timer-danger');
+          cardElement.classList.remove('card-flashing');
+          
+          // Get time limit and warning threshold based on break type
+          const breakType = breakTimers[employeeId].breakType;
+          const timeLimit = breakTimeouts[breakType] || 15;
+          const warningThreshold = warningThresholds[breakType] || (timeLimit - 5);
+          
+          // Check timer state and apply appropriate styling
+          if (elapsedMinutes >= timeLimit) {
+            // Exceeded time limit - red text and flashing card
+            timerElement.classList.add('timer-danger');
+            cardElement.classList.add('card-flashing');
+          } 
+          else if (elapsedMinutes >= warningThreshold) {
+            // Within warning threshold - orange text
+            timerElement.classList.add('timer-warning');
+          }
+          // Otherwise, stay white (default color)
+        }
+      }
+    }
+    
+    // Load employee status data
+    function loadEmployeeStatus() {
+      showRefreshMessage();
+      // Reset countdown when data is refreshed
+      countdownValue = REFRESH_INTERVAL;
+      document.getElementById('countdownTimer').innerText = countdownValue;
+      
+      google.script.run
+        .withSuccessHandler(displayEmployeeStatus)
+        .withFailureHandler(handleError)
+        .getLiveEmployeeStatus();
+    }
+    
+    // Display employee status
+    function displayEmployeeStatus(data) {
+      const clockedInContainer = document.getElementById('clockedInContainer');
+      const onBreakContainer = document.getElementById('onBreakContainer');
+      
+      // Clear containers
+      clockedInContainer.innerHTML = '';
+      onBreakContainer.innerHTML = '';
+      
+      // We'll rebuild the breakTimers object from scratch
+      // But keep track of which employees are currently on break
+      const currentlyOnBreak = new Set();
+      
+      // Clear break timers object before rebuilding it
+      Object.keys(breakTimers).forEach(key => delete breakTimers[key]);
+      
+      // Count employees in each category
+      let clockedInCount = 0;
+      let onBreakCount = 0;
+      
+      // Process employees
+      data.forEach(employee => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const statusIndicator = document.createElement('div');
+        statusIndicator.className = 'status-indicator';
+        
+        const nameElement = document.createElement('div');
+        nameElement.className = 'employee-name';
+        nameElement.innerText = employee.name;
+        
+        const departmentElement = document.createElement('div');
+        departmentElement.className = 'employee-department';
+        departmentElement.innerText = employee.department;
+        
+        const statusText = document.createElement('div');
+        statusText.className = 'status-text';
+        
+        // Make sure employee ID is available and consistent
+        const employeeId = employee.employeeId || employee.id;
+        
+        if (employee.status === 'Clocked In') {
+          statusIndicator.classList.add('clocked-in');
+          // Add compact class to working employee cards
+          card.classList.add('card-compact');
+          clockedInContainer.appendChild(card);
+          clockedInCount++;
+          
+          // Employee is not on break, so remove from known break employees
+          delete knownBreakEmployees[employeeId];
+        } else if (employee.status.includes('Break')) {
+          statusIndicator.classList.add('on-break');
+          statusText.innerText = employee.status;
+          onBreakContainer.appendChild(card);
+          onBreakCount++;
+          
+          // Add this employee to the currently on break set
+          currentlyOnBreak.add(employeeId);
+          
+          // Add break timer
+          const timerElement = document.createElement('div');
+          timerElement.className = 'break-timer';
+          timerElement.id = `break-timer-${employeeId}`;
+          card.appendChild(timerElement);
+          
+          // Determine break type
+          const breakType = employee.status.includes('Lunch') ? 'Lunch Break' : 'Regular Break';
+          
+          // Initialize break timer for this employee
+          if (employee.breakStartTime) {
+            // Server provided a start time - use it
+            breakTimers[employeeId] = {
+              startTime: new Date(employee.breakStartTime),
+              breakType: breakType,
+              timeLimit: employee.breakTimeLimit || breakTimeouts[breakType]
+            };
+            
+            console.log(`Using server-provided break time for ${employee.name}: ${new Date(employee.breakStartTime).toLocaleTimeString()}`);
+          } 
+          else if (employee.time) {
+            // Use the status time as fallback
+            breakTimers[employeeId] = {
+              startTime: new Date(employee.time),
+              breakType: breakType,
+              timeLimit: breakTimeouts[breakType]
+            };
+            
+            console.log(`Using status time for ${employee.name}: ${new Date(employee.time).toLocaleTimeString()}`);
+          }
+          else {
+            // No time information available, use current time
+            const newStartTime = new Date();
+            breakTimers[employeeId] = {
+              startTime: newStartTime,
+              breakType: breakType,
+              timeLimit: breakTimeouts[breakType]
+            };
+            
+            console.log(`No time info for ${employee.name}, using current time: ${newStartTime.toLocaleTimeString()}`);
+          }
+          
+          // Set initial timer display
+          if (breakTimers[employeeId] && breakTimers[employeeId].startTime) {
+            const elapsed = formatElapsedTime(breakTimers[employeeId].startTime);
+            timerElement.innerText = elapsed;
+          } else {
+            timerElement.innerText = "0:00";
+            console.warn(`Could not set timer for employee ${employee.name} (ID: ${employeeId})`);
+          }
+        }
+        
+        card.appendChild(statusIndicator);
+        card.appendChild(nameElement);
+        card.appendChild(departmentElement);
+        
+        // Only add status text to cards for employees on break
+        if (employee.status.includes('Break')) {
+          card.appendChild(statusText);
+        }
+      });
+      
+      // Show message if no employees in a category
+      if (clockedInCount === 0) {
+        clockedInContainer.innerHTML = '<div class="no-employees">No employees currently working</div>';
+      }
+      
+      if (onBreakCount === 0) {
+        onBreakContainer.innerHTML = '<div class="no-employees">No employees on break</div>';
+      }
+      
+      hideRefreshMessage();
+      
+      // Update timer displays immediately after creating them
+      updateBreakTimers();
+    }
+    
+    // Handle error
+    function handleError(error) {
+      console.error('Error loading employee data:', error);
+      document.getElementById('clockedInContainer').innerHTML = 
+        '<div class="no-employees">Error loading employee data. Will retry shortly.</div>';
+      document.getElementById('onBreakContainer').innerHTML = '';
+      
+      hideRefreshMessage();
+    }
+    
+    // Show refresh message
+    function showRefreshMessage() {
+      const message = document.getElementById('refreshMessage');
+      message.classList.add('show-message');
+    }
+    
+    // Hide refresh message
+    function hideRefreshMessage() {
+      const message = document.getElementById('refreshMessage');
+      message.classList.remove('show-message');
+    }
+    
+    // Initialize
+    function initialize() {
+      // Update clock immediately and every second
+      updateClock();
+      setInterval(updateClock, 1000);
+      
+      // Update break timers every second
+      setInterval(updateBreakTimers, 1000);
+      
+      // Update refresh countdown every second
+      updateRefreshCountdown();
+      setInterval(updateRefreshCountdown, 1000);
+      
+      // Load employee status immediately and refresh every 30 seconds
+      loadEmployeeStatus();
+      setInterval(loadEmployeeStatus, REFRESH_INTERVAL * 1000);
+      
+      // Log to console to confirm our code is running
+      console.log("Mobile TVDisplay initialized with responsive design");
+    }
+    
+    // Run initialization when page loads
+    window.onload = initialize;
+  </script>
+</body>
+</html>

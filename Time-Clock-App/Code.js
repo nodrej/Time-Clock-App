@@ -16,19 +16,19 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
+  } else if (page === 'mobile') {
+    return HtmlService
+      .createHtmlOutputFromFile('MobileDisplay')
+      .setTitle('Employee Time Tracking')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
   } else if (page === 'manager') {
     return HtmlService
       .createHtmlOutputFromFile('ManagerDashboard')
       .setTitle('Employee Time Tracking')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
-  }else if (page === 'timeoffmanagement') {
-    return HtmlService
-      .createHtmlOutputFromFile('TimeOffManagement')
-      .setTitle('Employee Time Tracking')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-      .setFaviconUrl('https://cdn-icons-png.flaticon.com/512/3666/3666228.png');
-  } else {
+  }else {
     return HtmlService
       .createHtmlOutputFromFile('Kiosk')
       .setTitle('Employee Time Tracking')
@@ -1839,66 +1839,81 @@ function getEmployeePayPeriodMissedMinutes(employeeId) {
 
 // Function to get all employees
 function getEmployees() {
-    try {
-        // Initialize spreadsheet
-        if (!initSpreadsheet()) {
-          return [];
-        }
-        
-        const employeeSheet = ss.getSheetByName('Employee Master Data');
-        const employeeData = employeeSheet.getDataRange().getValues();
-        
-        // Extract header row
-        const headers = employeeData[0];
-        
-        // Find column indexes
-        const idIndex = headers.indexOf('Employee ID');
-        const firstNameIndex = headers.indexOf('First Name');
-        const lastNameIndex = headers.indexOf('Last Name');
-        const departmentIndex = headers.indexOf('Department');
-        const emailIndex = headers.indexOf('Email');
-        const pinIndex = headers.indexOf('PIN');
-        const managerEmailIndex = headers.indexOf('Manager Email');
-        const hireDateIndex = headers.indexOf('Hire Date');
-        const statusIndex = headers.indexOf('Status');
-        const shiftIndex = headers.indexOf('Shift');
-        
-        // Map data to objects
-        const employees = [];
-        for (let i = 1; i < employeeData.length; i++) {
-          const row = employeeData[i];
-          
-          // Skip empty rows
-          if (!row[idIndex] && !row[firstNameIndex] && !row[lastNameIndex]) {
-            continue;
-          }
-          
-          // Format hire date if it exists
-          let hireDate = row[hireDateIndex];
-          if (hireDate instanceof Date) {
-            hireDate = Utilities.formatDate(hireDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
-          }
-          
-          employees.push({
-            id: row[idIndex],
-            firstName: row[firstNameIndex],
-            lastName: row[lastNameIndex],
-            department: row[departmentIndex],
-            email: row[emailIndex],
-            pin: row[pinIndex],
-            managerEmail: row[managerEmailIndex],
-            hireDate: hireDate,
-            status: row[statusIndex] || 'Active',
-            shift: row[shiftIndex]
-          });
-        }
-        
-        return employees;
-      } catch (error) {
-        Logger.log("Error in getEmployeesForManager: " + error.toString());
+  try {
+      // Initialize spreadsheet
+      if (!initSpreadsheet()) {
         return [];
       }
+      
+      const employeeSheet = ss.getSheetByName('Employee Master Data');
+      const employeeData = employeeSheet.getDataRange().getValues();
+      
+      // Extract header row
+      const headers = employeeData[0];
+      
+      // Find column indexes
+      const idIndex = headers.indexOf('Employee ID');
+      const firstNameIndex = headers.indexOf('First Name');
+      const lastNameIndex = headers.indexOf('Last Name');
+      const departmentIndex = headers.indexOf('Department');
+      const emailIndex = headers.indexOf('Email');
+      const pinIndex = headers.indexOf('PIN');
+      const managerEmailIndex = headers.indexOf('Manager Email');
+      const hireDateIndex = headers.indexOf('Hire Date');
+      const statusIndex = headers.indexOf('Status');
+      const shiftIndex = headers.indexOf('Shift');
+      const shiftIdIndex = headers.indexOf('Shift ID');
+      
+      // Find indexes for the new fields
+      const companyIndex = headers.indexOf('Company');
+      const employmentTypeIndex = headers.indexOf('Employment Type');
+      const scheduleTypeIndex = headers.indexOf('Schedule type');
+      const paymentTypeIndex = headers.indexOf('Payment type');
+      const hourlyRateIndex = headers.indexOf('Hourly rate');
+      
+      // Map data to objects
+      const employees = [];
+      for (let i = 1; i < employeeData.length; i++) {
+        const row = employeeData[i];
+        
+        // Skip empty rows
+        if (!row[idIndex] && !row[firstNameIndex] && !row[lastNameIndex]) {
+          continue;
+        }
+        
+        // Format hire date if it exists
+        let hireDate = row[hireDateIndex];
+        if (hireDate instanceof Date) {
+          hireDate = Utilities.formatDate(hireDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+        }
+        
+        employees.push({
+          id: row[idIndex],
+          firstName: row[firstNameIndex],
+          lastName: row[lastNameIndex],
+          department: row[departmentIndex],
+          email: row[emailIndex],
+          pin: row[pinIndex],
+          managerEmail: row[managerEmailIndex],
+          hireDate: hireDate,
+          status: row[statusIndex] || 'Active',
+          shift: row[shiftIndex],
+          shiftId: row[shiftIdIndex],
+          // Add the new fields
+          company: companyIndex >= 0 ? row[companyIndex] : '',
+          employmentType: employmentTypeIndex >= 0 ? row[employmentTypeIndex] : '',
+          scheduleType: scheduleTypeIndex >= 0 ? row[scheduleTypeIndex] : '',
+          paymentType: paymentTypeIndex >= 0 ? row[paymentTypeIndex] : '',
+          hourlyRate: hourlyRateIndex >= 0 ? row[hourlyRateIndex] : ''
+        });
+      }
+      
+      return employees;
+    } catch (error) {
+      Logger.log("Error in getEmployeesForManager: " + error.toString());
+      return [];
     }
+  }
 
   
   // Function to get all shifts
@@ -1937,7 +1952,8 @@ function getEmployees() {
     }
   }
   
-  // Function to save employee (add new or update existing)
+
+// Function to save employee (add new or update existing)
 function saveEmployee(employeeData) {
   try {
     // Initialize spreadsheet
@@ -1947,6 +1963,14 @@ function saveEmployee(employeeData) {
     
     const employeeSheet = ss.getSheetByName('Employee Master Data');
     const data = employeeSheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    // Find column indexes for the new fields
+    const companyIndex = headers.indexOf('Company');
+    const employmentTypeIndex = headers.indexOf('Employment Type');
+    const scheduleTypeIndex = headers.indexOf('Schedule type');
+    const paymentTypeIndex = headers.indexOf('Payment type');
+    const hourlyRateIndex = headers.indexOf('Hourly rate');
     
     // Check if this is a new employee
     if (employeeData.id === 'NEW') {
@@ -1960,25 +1984,37 @@ function saveEmployee(employeeData) {
       }
       employeeData.id = maxId + 1;
       
-      // Append new row
-      employeeSheet.appendRow([
-        employeeData.id,
-        employeeData.firstName,
-        employeeData.lastName,
-        employeeData.department,
-        employeeData.email,
-        employeeData.pin,
-        employeeData.managerEmail,
-        employeeData.hireDate,
-        employeeData.status,
-        employeeData.shift,
-        "" // Placeholder for shiftId, will be set with formula below
-      ]);
+      // Create a row with all values
+      const newRow = [];
+      for (let i = 0; i < headers.length; i++) {
+        if (i === 0) newRow.push(employeeData.id);
+        else if (i === 1) newRow.push(employeeData.firstName);
+        else if (i === 2) newRow.push(employeeData.lastName);
+        else if (i === 3) newRow.push(employeeData.department);
+        else if (i === 4) newRow.push(employeeData.email);
+        else if (i === 5) newRow.push(employeeData.pin);
+        else if (i === 6) newRow.push(employeeData.managerEmail);
+        else if (i === 7) newRow.push(employeeData.hireDate);
+        else if (i === 8) newRow.push(employeeData.status);
+        else if (i === 9) newRow.push(employeeData.shift);
+        else if (i === companyIndex) newRow.push(employeeData.company);
+        else if (i === employmentTypeIndex) newRow.push(employeeData.employmentType);
+        else if (i === scheduleTypeIndex) newRow.push(employeeData.scheduleType);
+        else if (i === paymentTypeIndex) newRow.push(employeeData.paymentType);
+        else if (i === hourlyRateIndex) newRow.push(employeeData.hourlyRate);
+        else newRow.push(""); // Default empty for other columns
+      }
       
-      // Get the new row index and set the formula for shiftId
+      // Append new row
+      employeeSheet.appendRow(newRow);
+      
+      // Get the new row index and set the formula for shiftId if needed
       const newRowIndex = employeeSheet.getLastRow();
-      const shiftIdCell = employeeSheet.getRange(newRowIndex, 11); // Column 11 is the shiftId column
-      shiftIdCell.setFormula(`=IFERROR(INDEX(Shifts!A:A, MATCH(J${newRowIndex}, Shifts!B:B, 0)), "")`);
+      const shiftIdIndex = headers.indexOf('Shift ID');
+      if (shiftIdIndex >= 0) {
+        const shiftIdCell = employeeSheet.getRange(newRowIndex, shiftIdIndex + 1); // +1 because sheet columns are 1-indexed
+        shiftIdCell.setFormula(`=IFERROR(INDEX(Shifts!A:A, MATCH(J${newRowIndex}, Shifts!B:B, 0)), "")`);
+      }
       
       return { success: true, message: 'Employee added successfully', employeeId: employeeData.id };
     } else {
@@ -1997,23 +2033,40 @@ function saveEmployee(employeeData) {
         return { success: false, message: 'Employee not found' };
       }
       
-      // Update the row (excluding shiftId which will be set with formula)
-      employeeSheet.getRange(rowIndex, 1, 1, 10).setValues([[
-        employeeData.id,
-        employeeData.firstName,
-        employeeData.lastName,
-        employeeData.department,
-        employeeData.email,
-        employeeData.pin,
-        employeeData.managerEmail,
-        employeeData.hireDate,
-        employeeData.status,
-        employeeData.shift
-      ]]);
+      // Update each field individually
+      employeeSheet.getRange(rowIndex, 2).setValue(employeeData.firstName);
+      employeeSheet.getRange(rowIndex, 3).setValue(employeeData.lastName);
+      employeeSheet.getRange(rowIndex, 4).setValue(employeeData.department);
+      employeeSheet.getRange(rowIndex, 5).setValue(employeeData.email);
+      employeeSheet.getRange(rowIndex, 6).setValue(employeeData.pin);
+      employeeSheet.getRange(rowIndex, 7).setValue(employeeData.managerEmail);
+      employeeSheet.getRange(rowIndex, 8).setValue(employeeData.hireDate);
+      employeeSheet.getRange(rowIndex, 9).setValue(employeeData.status);
+      employeeSheet.getRange(rowIndex, 10).setValue(employeeData.shift);
       
-      // Set the formula for shiftId
-      const shiftIdCell = employeeSheet.getRange(rowIndex, 11); // Column 11 is the shiftId column
-      shiftIdCell.setFormula(`=IFERROR(INDEX(Shifts!A:A, MATCH(J${rowIndex}, Shifts!B:B, 0)), "")`);
+      // Update the new fields
+      if (companyIndex >= 0) {
+        employeeSheet.getRange(rowIndex, companyIndex + 1).setValue(employeeData.company);
+      }
+      if (employmentTypeIndex >= 0) {
+        employeeSheet.getRange(rowIndex, employmentTypeIndex + 1).setValue(employeeData.employmentType);
+      }
+      if (scheduleTypeIndex >= 0) {
+        employeeSheet.getRange(rowIndex, scheduleTypeIndex + 1).setValue(employeeData.scheduleType);
+      }
+      if (paymentTypeIndex >= 0) {
+        employeeSheet.getRange(rowIndex, paymentTypeIndex + 1).setValue(employeeData.paymentType);
+      }
+      if (hourlyRateIndex >= 0) {
+        employeeSheet.getRange(rowIndex, hourlyRateIndex + 1).setValue(employeeData.hourlyRate);
+      }
+      
+      // Set the formula for shiftId if needed
+      const shiftIdIndex = headers.indexOf('Shift ID');
+      if (shiftIdIndex >= 0) {
+        const shiftIdCell = employeeSheet.getRange(rowIndex, shiftIdIndex + 1);
+        shiftIdCell.setFormula(`=IFERROR(INDEX(Shifts!A:A, MATCH(J${rowIndex}, Shifts!B:B, 0)), "")`);
+      }
       
       return { success: true, message: 'Employee updated successfully' };
     }
@@ -2022,6 +2075,8 @@ function saveEmployee(employeeData) {
     return { success: false, message: 'Failed to save employee: ' + error.toString() };
   }
 }
+
+
 
 /**
  * Checks if an employee's email is missing and saves a provided email if needed
@@ -2205,12 +2260,12 @@ function resetEmployeePin(pinData) {
 
 
 /**
- * Gets time logs with optional filtering
- * @param {string} dateFilter - Optional date filter (YYYY-MM-DD)
- * @param {string} employeeFilter - Optional employee ID filter
- * @param {boolean} missedMinutesFilter - Optional filter for logs with missed minutes
- * @return {Array} Filtered time logs
- */
+* Gets time logs with optional filtering
+* @param {string} dateFilter - Optional date filter (YYYY-MM-DD)
+* @param {string} employeeFilter - Optional employee ID filter
+* @param {boolean} missedMinutesFilter - Optional filter for logs with missed minutes
+* @return {Array} Filtered time logs
+*/
 // Function to get all time logs with optional filters
 function getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter) {
   const timeLogsSheet = ss.getSheetByName('Time Logs');
@@ -2237,7 +2292,10 @@ function getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter) {
     
     const logId = row[0];
     const employeeId = row[1];
-    const date = row[3] ? Utilities.formatDate(new Date(row[3]), Session.getScriptTimeZone(), "yyyy-MM-dd") : '';
+    
+    // Store the original date object for sorting later
+    const dateObj = row[3] ? new Date(row[3]) : null;
+    const date = dateObj ? Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "yyyy-MM-dd") : '';
     
     // Get the total missed minutes from column Z (index 25)
     const totalMissedMinutes = Number(row[25]) || 0;
@@ -2267,6 +2325,7 @@ function getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter) {
       employeeId: employeeId,
       employeeName: employeeName,
       date: date,
+      origDate: dateObj, // Store original date object for sorting
       clockInTime: formatTime(row[3]),
       clockOutTime: formatTime(row[4]),
       regularBreakStart1: formatTime(row[5]),
@@ -2279,6 +2338,19 @@ function getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter) {
       totalMissedMinutes: totalMissedMinutes // Include missed minutes in the result
     });
   }
+  
+  // Sort results by date in descending order (newest first)
+  result.sort((a, b) => {
+    // First try to sort by the original Date objects if available
+    if (a.origDate && b.origDate) {
+      return b.origDate - a.origDate; // Descending order
+    }
+    // Fall back to string comparison if needed
+    return b.date.localeCompare(a.date);
+  });
+  
+  // Remove the temporary origDate field we added for sorting
+  result.forEach(item => delete item.origDate);
   
   return result;
 }
@@ -2293,114 +2365,361 @@ function getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter) {
  */
 function updateTimeLog(rowIndex, timeLogData) {
   try {
+    Logger.log("=== START updateTimeLog ===");
+    Logger.log("Row Index: " + rowIndex);
+    Logger.log("Time Log Data received: " + JSON.stringify(timeLogData));
+    
     // Make sure spreadsheet is initialized
+    Logger.log("Initializing spreadsheet...");
     if (!initSpreadsheet()) {
+      Logger.log("ERROR: Failed to initialize spreadsheet");
       return { success: false, message: "Failed to initialize spreadsheet" };
     }
+    Logger.log("Spreadsheet initialized successfully");
     
     const timeLogsSheet = ss.getSheetByName('Time Logs');
+    Logger.log("Time Logs sheet accessed");
     
     // Get employee ID from the row
     const employeeId = timeLogsSheet.getRange(rowIndex, 2).getValue();
+    Logger.log("Employee ID from row " + rowIndex + ": " + employeeId);
     
-    // Get the date from the row (column C)
-    const baseDate = timeLogsSheet.getRange(rowIndex, 3).getValue();
-    const dateStr = Utilities.formatDate(new Date(baseDate), Session.getScriptTimeZone(), "yyyy-MM-dd");
+    // Get the original date from the row (column C)
+    const originalBaseDate = timeLogsSheet.getRange(rowIndex, 3).getValue();
+    Logger.log("Original base date from sheet: " + originalBaseDate + " (type: " + typeof originalBaseDate + ")");
     
-    // Function to create a properly formatted datetime from time string
-    const createDateTime = (timeStr) => {
-      if (!timeStr || timeStr.trim() === "") return "";
-      
+    // Use the provided clock in date if available, otherwise use the original date
+    const baseDate = timeLogData.clockInDate || Utilities.formatDate(new Date(originalBaseDate), Session.getScriptTimeZone(), "yyyy-MM-dd");
+    Logger.log("Using base date: " + baseDate);
+    
+    // Format the date string
+    const dateStr = baseDate;
+    Logger.log("Formatted date string: " + dateStr);
+    Logger.log("Script timezone: " + Session.getScriptTimeZone());
+    
+    // Track changes for audit trail
+    const changes = [];
+    
+    // Get current values from the sheet for comparison
+    const currentValues = {
+      date: Utilities.formatDate(new Date(originalBaseDate), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      clockIn: timeLogsSheet.getRange(rowIndex, 4).getValue(),
+      clockOut: timeLogsSheet.getRange(rowIndex, 5).getValue(),
+      regBreak1Start: timeLogsSheet.getRange(rowIndex, 6).getValue(),
+      regBreak1End: timeLogsSheet.getRange(rowIndex, 7).getValue(),
+      regBreak2Start: timeLogsSheet.getRange(rowIndex, 8).getValue(),
+      regBreak2End: timeLogsSheet.getRange(rowIndex, 9).getValue(),
+      lunchStart: timeLogsSheet.getRange(rowIndex, 10).getValue(),
+      lunchEnd: timeLogsSheet.getRange(rowIndex, 11).getValue()
+    };
+    
+    // Format current values for comparison
+    const formatTimeValue = (value) => {
+      if (!value) return "";
       try {
-        // Parse the time string (HH:MM:SS)
-        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        
-        // Create a new date object using the base date
-        const dateTime = new Date(dateStr);
-        dateTime.setHours(hours || 0, minutes || 0, seconds || 0, 0);
-        
-        return dateTime;
+        return Utilities.formatDate(new Date(value), Session.getScriptTimeZone(), "HH:mm:ss");
       } catch (e) {
-        Logger.log("Error parsing time: " + e.toString());
         return "";
       }
     };
     
-    // Create date objects for each time field
-    const clockInDateTime = createDateTime(timeLogData.clockInTime);
-    const clockOutDateTime = createDateTime(timeLogData.clockOutTime);
-    const regBreak1Start = createDateTime(timeLogData.regularBreakStart1);
-    const regBreak1End = createDateTime(timeLogData.regularBreakEnd1);
-    const regBreak2Start = createDateTime(timeLogData.regularBreakStart2);
-    const regBreak2End = createDateTime(timeLogData.regularBreakEnd2);
-    const lunchStart = createDateTime(timeLogData.lunchBreakStart);
-    const lunchEnd = createDateTime(timeLogData.lunchBreakEnd);
+    const currentFormattedValues = {
+      date: currentValues.date,
+      clockIn: formatTimeValue(currentValues.clockIn),
+      clockOut: formatTimeValue(currentValues.clockOut),
+      regBreak1Start: formatTimeValue(currentValues.regBreak1Start),
+      regBreak1End: formatTimeValue(currentValues.regBreak1End),
+      regBreak2Start: formatTimeValue(currentValues.regBreak2Start),
+      regBreak2End: formatTimeValue(currentValues.regBreak2End),
+      lunchStart: formatTimeValue(currentValues.lunchStart),
+      lunchEnd: formatTimeValue(currentValues.lunchEnd)
+    };
+    
+    // Enhanced function to create a properly formatted datetime from date and time strings
+    const createDateTime = (dateStr, timeStr) => {
+      Logger.log(`Creating DateTime for date: ${dateStr}, time: ${timeStr}`);
+      if (!timeStr || timeStr.trim() === "") {
+        Logger.log("Empty time string, returning empty value");
+        return "";
+      }
+      
+      // If no date is provided, use the base date
+      const useDate = dateStr || baseDate;
+      if (!useDate) {
+        Logger.log("No date available, returning empty value");
+        return "";
+      }
+      
+      try {
+        // Parse the time string (HH:MM:SS)
+        Logger.log("Parsing time string: " + timeStr);
+        const timeParts = timeStr.split(':');
+        Logger.log("Time parts: " + JSON.stringify(timeParts));
+        
+        const hours = Number(timeParts[0]);
+        const minutes = Number(timeParts[1]);
+        const seconds = timeParts.length > 2 ? Number(timeParts[2]) : 0;
+        
+        Logger.log("Parsed hours: " + hours + ", minutes: " + minutes + ", seconds: " + seconds);
+        
+        // Create a new date object using the provided date
+        Logger.log("Creating new Date object with date: " + useDate);
+        
+        // Parse the date components explicitly
+        const [year, month, day] = useDate.split('-').map(Number);
+        Logger.log("Date components - year: " + year + ", month: " + (month-1) + " (0-based), day: " + day);
+        
+        // Create date with explicit year, month (0-based), day values to avoid timezone issues
+        const dateTime = new Date(year, month-1, day, hours || 0, minutes || 0, seconds || 0);
+        Logger.log("Created date object with explicit components: " + dateTime);
+        
+        return dateTime;
+      } catch (e) {
+        Logger.log("ERROR parsing time: " + e.toString());
+        return "";
+      }
+    };
+    
+    // Create date objects for each time field using the appropriate date
+    Logger.log("Creating date objects for each time field...");
+    
+    // For clock in, use the clock in date if provided
+    Logger.log("Processing clockInTime with clockInDate: " + timeLogData.clockInDate);
+    const clockInDateTime = createDateTime(timeLogData.clockInDate, timeLogData.clockInTime);
+    Logger.log("Resulting clockInDateTime: " + clockInDateTime);
+    
+    // For clock out, use the clock out date if provided, otherwise use clock in date
+    const clockOutDateToUse = timeLogData.clockOutDate || timeLogData.clockInDate;
+    Logger.log("Processing clockOutTime with clockOutDate: " + clockOutDateToUse);
+    const clockOutDateTime = createDateTime(clockOutDateToUse, timeLogData.clockOutTime);
+    Logger.log("Resulting clockOutDateTime: " + clockOutDateTime);
+    
+    // For breaks, use the base date (which is now the clock in date if provided)
+    Logger.log("Processing regularBreakStart1: " + timeLogData.regularBreakStart1);
+    const regBreak1Start = createDateTime(baseDate, timeLogData.regularBreakStart1);
+    Logger.log("Resulting regBreak1Start: " + regBreak1Start);
+    
+    Logger.log("Processing regularBreakEnd1: " + timeLogData.regularBreakEnd1);
+    const regBreak1End = createDateTime(baseDate, timeLogData.regularBreakEnd1);
+    Logger.log("Resulting regBreak1End: " + regBreak1End);
+    
+    Logger.log("Processing regularBreakStart2: " + timeLogData.regularBreakStart2);
+    const regBreak2Start = createDateTime(baseDate, timeLogData.regularBreakStart2);
+    Logger.log("Resulting regBreak2Start: " + regBreak2Start);
+    
+    Logger.log("Processing regularBreakEnd2: " + timeLogData.regularBreakEnd2);
+    const regBreak2End = createDateTime(baseDate, timeLogData.regularBreakEnd2);
+    Logger.log("Resulting regBreak2End: " + regBreak2End);
+    
+    Logger.log("Processing lunchBreakStart: " + timeLogData.lunchBreakStart);
+    const lunchStart = createDateTime(baseDate, timeLogData.lunchBreakStart);
+    Logger.log("Resulting lunchStart: " + lunchStart);
+    
+    Logger.log("Processing lunchBreakEnd: " + timeLogData.lunchBreakEnd);
+    const lunchEnd = createDateTime(baseDate, timeLogData.lunchBreakEnd);
+    Logger.log("Resulting lunchEnd: " + lunchEnd);
     
     // Calculate late minutes if clock-in time is provided
     let lateMinutes = 0;
     if (clockInDateTime) {
+      Logger.log("Calculating late minutes...");
       lateMinutes = checkIfLate(employeeId, clockInDateTime);
+      Logger.log("Late minutes calculated: " + lateMinutes);
     }
     
     // Calculate early departure minutes if clock-out time is provided
     let earlyMinutes = 0;
     if (clockOutDateTime) {
+      Logger.log("Calculating early departure minutes...");
       earlyMinutes = checkIfEarlyDeparture(employeeId, clockOutDateTime);
+      Logger.log("Early departure minutes calculated: " + earlyMinutes);
     }
     
-    // Update the time fields
-    if (clockInDateTime) timeLogsSheet.getRange(rowIndex, 4).setValue(clockInDateTime);
-    if (clockOutDateTime) timeLogsSheet.getRange(rowIndex, 5).setValue(clockOutDateTime);
-    if (regBreak1Start) timeLogsSheet.getRange(rowIndex, 6).setValue(regBreak1Start);
-    if (regBreak1End) timeLogsSheet.getRange(rowIndex, 7).setValue(regBreak1End);
-    if (regBreak2Start) timeLogsSheet.getRange(rowIndex, 8).setValue(regBreak2Start);
-    if (regBreak2End) timeLogsSheet.getRange(rowIndex, 9).setValue(regBreak2End);
-    if (lunchStart) timeLogsSheet.getRange(rowIndex, 10).setValue(lunchStart);
-    if (lunchEnd) timeLogsSheet.getRange(rowIndex, 11).setValue(lunchEnd);
+    // Check if we have a clearedFields object to track explicitly cleared fields
+    const clearedFields = timeLogData.clearedFields || {};
     
-    // Update late and early departure minutes - STILL CALCULATE THESE, just don't take them as inputs
+    // Update the time fields
+    Logger.log("Updating time fields in the sheet...");
+    
+    // Update the date column (column C) if clock in date has changed
+    if (timeLogData.clockInDate && timeLogData.clockInDate !== currentFormattedValues.date) {
+      Logger.log("Updating date in column C to: " + timeLogData.clockInDate);
+      // Create a date object for the new date at midnight
+      const [year, month, day] = timeLogData.clockInDate.split('-').map(Number);
+      const newBaseDate = new Date(year, month-1, day);
+      timeLogsSheet.getRange(rowIndex, 3).setValue(newBaseDate);
+      
+      // Track change
+      changes.push(`Date changed from ${currentFormattedValues.date} to ${timeLogData.clockInDate}`);
+    }
+    
+    // Clock In Time
+    if (clearedFields.clockInTime === true) {
+      Logger.log("Clearing clockInTime in cell (row " + rowIndex + ", col 4)");
+      timeLogsSheet.getRange(rowIndex, 4).clearContent();
+      changes.push("Clock-in time cleared");
+    } else if (clockInDateTime && timeLogData.clockInTime !== currentFormattedValues.clockIn) {
+      Logger.log("Setting clockInDateTime in cell (row " + rowIndex + ", col 4): " + clockInDateTime);
+      timeLogsSheet.getRange(rowIndex, 4).setValue(clockInDateTime);
+      changes.push(`Clock-in time changed from ${currentFormattedValues.clockIn} to ${timeLogData.clockInTime}`);
+    }
+    
+    // Clock Out Time
+    if (clearedFields.clockOutTime === true) {
+      Logger.log("Clearing clockOutTime in cell (row " + rowIndex + ", col 5)");
+      timeLogsSheet.getRange(rowIndex, 5).clearContent();
+      changes.push("Clock-out time cleared");
+    } else if (clockOutDateTime && timeLogData.clockOutTime !== currentFormattedValues.clockOut) {
+      Logger.log("Setting clockOutDateTime in cell (row " + rowIndex + ", col 5): " + clockOutDateTime);
+      timeLogsSheet.getRange(rowIndex, 5).setValue(clockOutDateTime);
+      changes.push(`Clock-out time changed from ${currentFormattedValues.clockOut} to ${timeLogData.clockOutTime}`);
+    }
+    
+    // Regular Break 1 Start
+    if (clearedFields.regularBreakStart1 === true) {
+      Logger.log("Clearing regularBreakStart1 in cell (row " + rowIndex + ", col 6)");
+      timeLogsSheet.getRange(rowIndex, 6).clearContent();
+      changes.push("Regular break 1 start time cleared");
+    } else if (regBreak1Start && timeLogData.regularBreakStart1 !== currentFormattedValues.regBreak1Start) {
+      Logger.log("Setting regBreak1Start in cell (row " + rowIndex + ", col 6): " + regBreak1Start);
+      timeLogsSheet.getRange(rowIndex, 6).setValue(regBreak1Start);
+      changes.push(`Regular break 1 start changed from ${currentFormattedValues.regBreak1Start} to ${timeLogData.regularBreakStart1}`);
+    }
+    
+    // Regular Break 1 End
+    if (clearedFields.regularBreakEnd1 === true) {
+      Logger.log("Clearing regularBreakEnd1 in cell (row " + rowIndex + ", col 7)");
+      timeLogsSheet.getRange(rowIndex, 7).clearContent();
+      changes.push("Regular break 1 end time cleared");
+    } else if (regBreak1End && timeLogData.regularBreakEnd1 !== currentFormattedValues.regBreak1End) {
+      Logger.log("Setting regBreak1End in cell (row " + rowIndex + ", col 7): " + regBreak1End);
+      timeLogsSheet.getRange(rowIndex, 7).setValue(regBreak1End);
+      changes.push(`Regular break 1 end changed from ${currentFormattedValues.regBreak1End} to ${timeLogData.regularBreakEnd1}`);
+    }
+    
+    // Regular Break 2 Start
+    if (clearedFields.regularBreakStart2 === true) {
+      Logger.log("Clearing regularBreakStart2 in cell (row " + rowIndex + ", col 8)");
+      timeLogsSheet.getRange(rowIndex, 8).clearContent();
+      changes.push("Regular break 2 start time cleared");
+    } else if (regBreak2Start && timeLogData.regularBreakStart2 !== currentFormattedValues.regBreak2Start) {
+      Logger.log("Setting regBreak2Start in cell (row " + rowIndex + ", col 8): " + regBreak2Start);
+      timeLogsSheet.getRange(rowIndex, 8).setValue(regBreak2Start);
+      changes.push(`Regular break 2 start changed from ${currentFormattedValues.regBreak2Start} to ${timeLogData.regularBreakStart2}`);
+    }
+    
+    // Regular Break 2 End
+    if (clearedFields.regularBreakEnd2 === true) {
+      Logger.log("Clearing regularBreakEnd2 in cell (row " + rowIndex + ", col 9)");
+      timeLogsSheet.getRange(rowIndex, 9).clearContent();
+      changes.push("Regular break 2 end time cleared");
+    } else if (regBreak2End && timeLogData.regularBreakEnd2 !== currentFormattedValues.regBreak2End) {
+      Logger.log("Setting regBreak2End in cell (row " + rowIndex + ", col 9): " + regBreak2End);
+      timeLogsSheet.getRange(rowIndex, 9).setValue(regBreak2End);
+      changes.push(`Regular break 2 end changed from ${currentFormattedValues.regBreak2End} to ${timeLogData.regularBreakEnd2}`);
+    }
+    
+    // Lunch Break Start
+    if (clearedFields.lunchBreakStart === true) {
+      Logger.log("Clearing lunchBreakStart in cell (row " + rowIndex + ", col 10)");
+      timeLogsSheet.getRange(rowIndex, 10).clearContent();
+      changes.push("Lunch break start time cleared");
+    } else if (lunchStart && timeLogData.lunchBreakStart !== currentFormattedValues.lunchStart) {
+      Logger.log("Setting lunchStart in cell (row " + rowIndex + ", col 10): " + lunchStart);
+      timeLogsSheet.getRange(rowIndex, 10).setValue(lunchStart);
+      changes.push(`Lunch break start changed from ${currentFormattedValues.lunchStart} to ${timeLogData.lunchBreakStart}`);
+    }
+    
+    // Lunch Break End
+    if (clearedFields.lunchBreakEnd === true) {
+      Logger.log("Clearing lunchBreakEnd in cell (row " + rowIndex + ", col 11)");
+      timeLogsSheet.getRange(rowIndex, 11).clearContent();
+      changes.push("Lunch break end time cleared");
+    } else if (lunchEnd && timeLogData.lunchBreakEnd !== currentFormattedValues.lunchEnd) {
+      Logger.log("Setting lunchEnd in cell (row " + rowIndex + ", col 11): " + lunchEnd);
+      timeLogsSheet.getRange(rowIndex, 11).setValue(lunchEnd);
+      changes.push(`Lunch break end changed from ${currentFormattedValues.lunchEnd} to ${timeLogData.lunchBreakEnd}`);
+    }
+    
+    // Update late and early departure minutes
+    Logger.log("Updating late and early departure minutes...");
+    Logger.log("Setting late minutes in cell (row " + rowIndex + ", col 24): " + (lateMinutes > 0 ? lateMinutes : ""));
     timeLogsSheet.getRange(rowIndex, 24).setValue(lateMinutes > 0 ? lateMinutes : "");
+    
+    Logger.log("Setting early minutes in cell (row " + rowIndex + ", col 25): " + (earlyMinutes > 0 ? earlyMinutes : ""));
     timeLogsSheet.getRange(rowIndex, 25).setValue(earlyMinutes > 0 ? earlyMinutes : "");
     
     // Update status based on clock-in and clock-out times
     const status = (clockInDateTime && clockOutDateTime) ? "Complete" : "Incomplete";
+    Logger.log("Setting status in cell (row " + rowIndex + ", col 16): " + status);
     timeLogsSheet.getRange(rowIndex, 16).setValue(status);
     
     // Update notes if needed to reflect late arrival or early departure
+    Logger.log("Updating notes field...");
     const currentNotes = timeLogsSheet.getRange(rowIndex, 17).getValue() || "";
+    Logger.log("Current notes: " + currentNotes);
+    
     let newNotes = currentNotes;
     
     // Remove existing late/early notes
     newNotes = newNotes.replace(/Late clock-in,?\s*/g, "");
     newNotes = newNotes.replace(/Early departure,?\s*/g, "");
     newNotes = newNotes.replace(/,\s*$/, ""); // Remove trailing comma if any
+    Logger.log("Notes after removing existing late/early tags: " + newNotes);
     
     // Add new notes if needed
     if (lateMinutes > 0) {
       newNotes = newNotes ? newNotes + ", Late clock-in" : "Late clock-in";
+      Logger.log("Added late clock-in note. Notes now: " + newNotes);
     }
+    
     if (earlyMinutes > 0) {
       newNotes = newNotes ? newNotes + ", Early departure" : "Early departure";
+      Logger.log("Added early departure note. Notes now: " + newNotes);
+    }
+    
+    // Add audit trail for changes made from manager dashboard
+    if (changes.length > 0) {
+      const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+      const auditNote = `[${timestamp}] Manager edit: ${changes.join("; ")}`;
+      
+      // Append to existing notes or create new note
+      newNotes = newNotes ? newNotes + "\n" + auditNote : auditNote;
+      Logger.log("Added audit trail to notes: " + auditNote);
     }
     
     // Update notes field
     if (newNotes !== currentNotes) {
+      Logger.log("Setting updated notes in cell (row " + rowIndex + ", col 17): " + newNotes);
       timeLogsSheet.getRange(rowIndex, 17).setValue(newNotes);
+    } else {
+      Logger.log("Notes unchanged, not updating");
     }
     
     // Recalculate the Total Missed Minutes formula in column Z (26)
     const totalMissedFormula = `=SUM(IF(ISBLANK(U${rowIndex}),0,U${rowIndex}),IF(ISBLANK(V${rowIndex}),0,V${rowIndex}),IF(ISBLANK(W${rowIndex}),0,W${rowIndex}),IF(ISBLANK(X${rowIndex}),0,X${rowIndex}),IF(ISBLANK(Y${rowIndex}),0,Y${rowIndex}))`;
+    Logger.log("Setting total missed minutes formula in cell (row " + rowIndex + ", col 26): " + totalMissedFormula);
     timeLogsSheet.getRange(rowIndex, 26).setFormula(totalMissedFormula);
+    
+    Logger.log("Time log update completed successfully");
+    Logger.log("=== END updateTimeLog ===");
     
     return { 
       success: true, 
-      message: "Time log updated successfully"
+      message: "Time log updated successfully",
+      changes: changes // Return the changes made for potential client-side display
     };
   } catch (error) {
-    Logger.log("Error in updateTimeLog: " + error.toString());
+    Logger.log("ERROR in updateTimeLog: " + error.toString());
+    Logger.log("Error stack: " + error.stack);
     return { success: false, message: error.toString() };
   }
 }
+
+
+
+
+
 
 
 
@@ -2826,23 +3145,38 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
     const timeLogsSheet = ss.getSheetByName('Time Logs');
     const timeLogsData = timeLogsSheet.getDataRange().getValues();
     
-    // Get employee data for names
+    // Get employee data for names and additional information
     const employeeSheet = ss.getSheetByName('Employee Master Data');
     const employeeData = employeeSheet.getDataRange().getValues();
     
-    // Create a map of employee IDs to names
+    // Get headers to find column indices
+    const employeeHeaders = employeeData[0];
+    const employmentTypeIdx = employeeHeaders.indexOf('Employment Type');
+    const hourlyRateIdx = employeeHeaders.indexOf('Hourly rate');
+    const eligibleForPSIdx = employeeHeaders.indexOf('Eligible for Profit Sharing');
+    
+    // Create a map of employee IDs to employee details
     const employeeMap = {};
     for (let i = 1; i < employeeData.length; i++) {
       if (employeeData[i][0]) { // Check if employee ID exists
         const employeeId = employeeData[i][0].toString();
         const firstName = employeeData[i][1] || '';
         const lastName = employeeData[i][2] || '';
-        employeeMap[employeeId] = `${firstName} ${lastName}`.trim();
+        
+        employeeMap[employeeId] = {
+          name: `${firstName} ${lastName}`.trim(),
+          employmentType: employmentTypeIdx >= 0 ? employeeData[i][employmentTypeIdx] || '' : '',
+          hourlyRate: hourlyRateIdx >= 0 ? employeeData[i][hourlyRateIdx] || '' : '',
+          eligibleForProfitSharing: eligibleForPSIdx >= 0 ? employeeData[i][eligibleForPSIdx] || 'No' : 'No'
+        };
       }
     }
     
     // Aggregate data by employee
     const employeeTotals = {};
+    
+    // Track employees with AUTO- logs
+    const employeesWithAutoLogs = new Set();
     
     // Skip header row
     for (let i = 1; i < timeLogsData.length; i++) {
@@ -2851,6 +3185,8 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
       if (!row[0] || !row[1]) continue;
       
       const employeeId = row[1].toString();
+      const logId = row[0].toString();
+      
       try {
         // Get the log date (column C, index 2)
         let logDate;
@@ -2883,24 +3219,32 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
         
         // Check if the log date falls within the date range (using actual datetime)
         if (logDateTime >= startDateTime && logDateTime <= endDateTime) {
+          // Check if this is an AUTO- log and add to tracking set if it is
+          if (logId.includes("AUTO-")) {
+            employeesWithAutoLogs.add(employeeId);
+            Logger.log(`Found AUTO- log for employee ${employeeId}: ${logId}`);
+          }
+          
           // Initialize employee data if not exists
           if (!employeeTotals[employeeId]) {
             employeeTotals[employeeId] = {
               employeeId: employeeId,
-              employeeName: employeeMap[employeeId] || `Unknown (ID: ${employeeId})`,
+              employeeName: employeeMap[employeeId] ? employeeMap[employeeId].name : `Unknown (ID: ${employeeId})`,
+              employmentType: employeeMap[employeeId] ? employeeMap[employeeId].employmentType : '',
+              hourlyRate: employeeMap[employeeId] ? employeeMap[employeeId].hourlyRate : '',
+              eligibleForProfitSharing: employeeMap[employeeId] ? employeeMap[employeeId].eligibleForProfitSharing : 'No',
               totalHoursWorked: 0,
               regularBreakTime: 0,
               lunchBreakTime: 0,
               totalMissedMinutes: 0,
               recordCount: 0,
-              // NEW: Add arrays for detailed shift information
               dailyLogs: [],
-              dailyHours: []
+              dailyHours: [],
+              hasAutoLogs: false // Initialize flag for AUTO- logs
             };
           }
           
           // Add data from this row
-          const logId = row[0].toString();
           const totalHoursWorked = parseFloat(row[14] || 0); // Column O: Total Net Hours Worked
           const regularBreakTime = parseFloat(row[12] || 0); // Column M: Total Regular Break Time
           const lunchBreakTime = parseFloat(row[13] || 0); // Column N: Total Lunch Break Time
@@ -2942,8 +3286,27 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
       }
     }
     
+    // Update hasAutoLogs flag for all employees with AUTO- logs
+    employeesWithAutoLogs.forEach(employeeId => {
+      if (employeeTotals[employeeId]) {
+        employeeTotals[employeeId].hasAutoLogs = true;
+        Logger.log(`Marked employee ${employeeId} as having AUTO- logs`);
+      }
+    });
+    
     // Convert to array for return
-    const reportData = Object.values(employeeTotals);
+    const reportData = Object.values(employeeTotals).map(employee => {
+      // If employee has AUTO- logs, set paid break hours to 0
+      if (employee.hasAutoLogs) {
+        Logger.log(`Setting paid break hours to 0 for employee ${employee.employeeId} due to AUTO- logs`);
+        employee.paidBreakHours = 0;
+      } else {
+        // Calculate paid break hours based on qualifying shifts
+        const qualifyingShifts = Math.floor(employee.totalHoursWorked / 7);
+        employee.paidBreakHours = qualifyingShifts * 0.5; // 30 minutes (0.5 hours) per qualifying shift
+      }
+      return employee;
+    });
     
     // Sort by employee name
     reportData.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
@@ -2955,6 +3318,8 @@ function generateEmployeeTimeReport(startDate, startTime, endDate, endTime) {
     throw new Error('Failed to generate report: ' + error.toString());
   }
 }
+
+
 
 
 // Generate PDF report
@@ -5097,5 +5462,607 @@ function getEmployeePTOBalanceWithPending(employeeId) {
   } catch (e) {
     Logger.log("Error getting PTO balance with pending: " + e.toString());
     return { success: false, message: "Error retrieving PTO balance" };
+  }
+}
+
+
+
+
+
+
+
+
+// Profit Sharing Functions
+
+/**
+ * Calculates profit sharing eligibility for an employee based on their full time start date and schedule type
+ * @param {string|number} employeeId - The employee's ID (optional - if not provided, will update all employees)
+ * @return {Object} Result of the operation
+ */
+function calculateProfitSharingEligibility(employeeId = null) {
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      return { success: false, message: "Failed to initialize spreadsheet" };
+    }
+    
+    // Get employee sheet
+    const employeeSheet = ss.getSheetByName('Employee Master Data');
+    if (!employeeSheet) {
+      return { success: false, message: "Employee Master Data sheet not found" };
+    }
+    
+    // Get pay periods sheet for determining eligibility dates
+    const payPeriodsSheet = ss.getSheetByName('Pay Periods');
+    if (!payPeriodsSheet) {
+      return { success: false, message: "Pay Periods sheet not found" };
+    }
+    
+    // Get all employee data
+    const employeeData = employeeSheet.getDataRange().getValues();
+    
+    // Find column indices
+    const headers = employeeData[0];
+    const idIdx = headers.indexOf('Employee ID');
+    const hireDateIdx = headers.indexOf('Hire Date');
+    const fullTimeStartDateIdx = headers.indexOf('Full Time Start Date'); // New column X
+    const eligibilityIdx = headers.indexOf('Eligible for Profit Sharing');
+    const eligibilityDateIdx = headers.indexOf('Date Eligible for Profit Sharing'); // Column W
+    const statusIdx = headers.indexOf('Status');
+    const scheduleTypeIdx = headers.indexOf('Schedule type');
+    
+    if (fullTimeStartDateIdx === -1) {
+      return { success: false, message: "Full Time Start Date column not found in column X" };
+    }
+    
+    if (eligibilityIdx === -1) {
+      return { success: false, message: "Eligible for Profit Sharing column not found in column V" };
+    }
+    
+    if (eligibilityDateIdx === -1) {
+      return { success: false, message: "Date Eligible for Profit Sharing column not found in column W" };
+    }
+    
+    if (scheduleTypeIdx === -1) {
+      return { success: false, message: "Schedule type column not found" };
+    }
+    
+    // Get pay periods data
+    const payPeriodsData = payPeriodsSheet.getDataRange().getValues();
+    
+    // Sort pay periods by start date
+    const payPeriods = [];
+    for (let i = 1; i < payPeriodsData.length; i++) {
+      if (payPeriodsData[i][0] && payPeriodsData[i][2] && payPeriodsData[i][4]) { // Has ID, start date, and end date
+        payPeriods.push({
+          id: payPeriodsData[i][0],
+          name: payPeriodsData[i][1],
+          startDate: new Date(payPeriodsData[i][2]),
+          endDate: new Date(payPeriodsData[i][4])
+        });
+      }
+    }
+    
+    // Sort pay periods by end date
+    payPeriods.sort((a, b) => a.endDate - b.endDate);
+    
+    // Group pay periods by month (using end date)
+    const payPeriodsByMonth = {};
+    payPeriods.forEach(period => {
+      const year = period.endDate.getFullYear();
+      const month = period.endDate.getMonth();
+      const key = `${year}-${month}`;
+      
+      if (!payPeriodsByMonth[key]) {
+        payPeriodsByMonth[key] = [];
+      }
+      
+      payPeriodsByMonth[key].push(period);
+    });
+    
+    // Process employees
+    const results = [];
+    const today = new Date();
+    
+    for (let i = 1; i < employeeData.length; i++) {
+      // Skip if we're looking for a specific employee and this isn't it
+      if (employeeId !== null && employeeData[i][idIdx] != employeeId) {
+        continue;
+      }
+      
+      // Skip inactive employees
+      if (statusIdx !== -1 && employeeData[i][statusIdx] !== "Active") {
+        continue;
+      }
+      
+      // Check if employee is Full Time - if not, they're not eligible
+      const scheduleType = employeeData[i][scheduleTypeIdx];
+      const isFullTime = scheduleType === "Full Time";
+      
+      // Get full time start date (use hire date as fallback if not available)
+      const fullTimeStartDate = employeeData[i][fullTimeStartDateIdx];
+      const hireDate = employeeData[i][hireDateIdx];
+      
+      // Use Full Time Start Date if available, otherwise fall back to Hire Date
+      const startDate = (fullTimeStartDate && fullTimeStartDate instanceof Date) ? fullTimeStartDate : hireDate;
+      
+      if (!startDate || !(startDate instanceof Date)) {
+        results.push({
+          employeeId: employeeData[i][idIdx],
+          success: false,
+          message: "Invalid start date (neither Full Time Start Date nor Hire Date is valid)"
+        });
+        continue;
+      }
+      
+      // Calculate the date 4 months after start date
+      const fourMonthsAfterStart = new Date(startDate);
+      fourMonthsAfterStart.setMonth(fourMonthsAfterStart.getMonth() + 4);
+      
+      // Calculate the month after that (5th month)
+      const fifthMonth = new Date(fourMonthsAfterStart);
+      fifthMonth.setMonth(fifthMonth.getMonth() + 1);
+      fifthMonth.setDate(1); // First day of the month
+      
+      // Find the second pay period in the fifth month
+      const fifthMonthKey = `${fifthMonth.getFullYear()}-${fifthMonth.getMonth()}`;
+      let eligibilityDate = null;
+      
+      if (payPeriodsByMonth[fifthMonthKey] && payPeriodsByMonth[fifthMonthKey].length >= 2) {
+        // Get the second pay period of the month (using end date)
+        const secondPayPeriod = payPeriodsByMonth[fifthMonthKey][1];
+        eligibilityDate = secondPayPeriod.endDate;
+      } else {
+        // If we can't find the exact pay period, estimate it as the last day of the month
+        eligibilityDate = new Date(fifthMonth.getFullYear(), fifthMonth.getMonth() + 1, 0);
+      }
+      
+      // Determine if employee is eligible now - must be both past eligibility date AND full time
+      const isEligible = (today >= eligibilityDate) && isFullTime;
+      
+      // Format the eligibility date for display
+      const formattedEligibilityDate = Utilities.formatDate(eligibilityDate, Session.getScriptTimeZone(), "MM/dd/yyyy");
+      
+      // Update the eligibility status in column V
+      employeeSheet.getRange(i + 1, eligibilityIdx + 1).setValue(isEligible ? "Yes" : "No");
+      
+      // Add a note with the eligibility date for reference and schedule type info if not eligible
+      let noteText = `Eligible from ${formattedEligibilityDate}`;
+      if (!isFullTime) {
+        noteText += ` (Not eligible: Schedule type is "${scheduleType}" - must be "Full Time")`;
+      }
+      employeeSheet.getRange(i + 1, eligibilityIdx + 1).setNote(noteText);
+      
+      // Update the eligibility date in column W, but only if they meet the schedule type requirement
+      if (isFullTime) {
+        employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).setValue(eligibilityDate);
+      } else {
+        // Clear the eligibility date if they're not full time
+        employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).clearContent();
+      }
+      
+      // Format the start date for display
+      const formattedStartDate = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MM/dd/yyyy");
+      
+      // Add to results
+      results.push({
+        employeeId: employeeData[i][idIdx],
+        startDate: formattedStartDate,
+        startDateType: fullTimeStartDate ? "Full Time Start Date" : "Hire Date (fallback)",
+        fourMonthsAfterStart: Utilities.formatDate(fourMonthsAfterStart, Session.getScriptTimeZone(), "MM/dd/yyyy"),
+        eligibilityDate: formattedEligibilityDate,
+        scheduleType: scheduleType || "Not Set",
+        isFullTime: isFullTime,
+        isEligible: isEligible,
+        success: true
+      });
+      
+      // If we were looking for a specific employee and found them, we can stop
+      if (employeeId !== null) {
+        break;
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Processed ${results.length} employees`,
+      results: results
+    };
+    
+  } catch (error) {
+    Logger.log("Error in calculateProfitSharingEligibility: " + error.toString());
+    return { success: false, message: error.toString() };
+  }
+}
+
+
+
+
+
+
+
+/**
+ * Gets profit sharing eligibility for a specific employee
+ * @param {string|number} employeeId - The employee's ID
+ * @return {Object} Eligibility information
+ */
+function getEmployeeProfitSharingEligibility(employeeId) {
+  const result = calculateProfitSharingEligibility(employeeId);
+  
+  if (result.success && result.results && result.results.length > 0) {
+    return {
+      success: true,
+      employeeId: result.results[0].employeeId,
+      isEligible: result.results[0].isEligible,
+      eligibilityDate: result.results[0].eligibilityDate
+    };
+  }
+  
+  return { 
+    success: false, 
+    message: result.message || "Failed to determine eligibility" 
+  };
+}
+
+/**
+ * Updates profit sharing eligibility for all employees with detailed logging
+ * @return {Object} Result of the operation with logging information
+ */
+function updateAllEmployeeProfitSharingEligibility() {
+  // Start logging
+  Logger.log("Starting profit sharing eligibility update for all employees");
+  const startTime = new Date();
+  
+  // Track changes
+  const changes = {
+    total: 0,
+    becameEligible: [],
+    becameIneligible: [],
+    unchanged: 0,
+    errors: []
+  };
+  
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      Logger.log("Failed to initialize spreadsheet");
+      return { success: false, message: "Failed to initialize spreadsheet" };
+    }
+    
+    // Get employee sheet to capture current state before changes
+    const employeeSheet = ss.getSheetByName('Employee Master Data');
+    if (!employeeSheet) {
+      Logger.log("Employee Master Data sheet not found");
+      return { success: false, message: "Employee Master Data sheet not found" };
+    }
+    
+    // Get current eligibility status before making changes
+    const currentData = employeeSheet.getDataRange().getValues();
+    const headers = currentData[0];
+    const idIdx = headers.indexOf('Employee ID');
+    const eligibilityIdx = headers.indexOf('Eligible for Profit Sharing');
+    
+    // Create a map of current eligibility status
+    const currentEligibility = {};
+    for (let i = 1; i < currentData.length; i++) {
+      if (currentData[i][idIdx]) {
+        currentEligibility[currentData[i][idIdx]] = currentData[i][eligibilityIdx] === "Yes";
+      }
+    }
+    
+    // Run the calculation
+    Logger.log("Calling calculateProfitSharingEligibility function");
+    const result = calculateProfitSharingEligibility();
+    
+    // If the calculation was successful, analyze changes
+    if (result.success && result.results) {
+      Logger.log(`Successfully processed ${result.results.length} employees`);
+      
+      // Analyze each employee result to track changes
+      result.results.forEach(employee => {
+        const employeeId = employee.employeeId;
+        const wasEligible = currentEligibility[employeeId] || false;
+        const isNowEligible = employee.isEligible;
+        
+        if (wasEligible !== isNowEligible) {
+          changes.total++;
+          
+          if (isNowEligible) {
+            changes.becameEligible.push({
+              employeeId: employeeId,
+              eligibleFrom: employee.eligibilityDate,
+              reason: "Passed eligibility date and is Full Time"
+            });
+            Logger.log(`Employee ${employeeId} became eligible for profit sharing`);
+          } else {
+            changes.becameIneligible.push({
+              employeeId: employeeId,
+              reason: employee.isFullTime ? 
+                "No longer meets date criteria" : 
+                `Schedule type is "${employee.scheduleType}" (not Full Time)`
+            });
+            Logger.log(`Employee ${employeeId} became ineligible for profit sharing: ${employee.isFullTime ? "No longer meets date criteria" : "Not Full Time"}`);
+          }
+        } else {
+          changes.unchanged++;
+        }
+      });
+      
+      // Log any errors from the results
+      result.results.forEach(employee => {
+        if (!employee.success) {
+          changes.errors.push({
+            employeeId: employee.employeeId,
+            error: employee.message
+          });
+          Logger.log(`Error processing employee ${employee.employeeId}: ${employee.message}`);
+        }
+      });
+      
+      // Calculate execution time
+      const endTime = new Date();
+      const executionTime = (endTime - startTime) / 1000; // in seconds
+      
+      // Create a detailed log entry in the spreadsheet
+      logUpdateToSpreadsheet({
+        timestamp: new Date(),
+        totalEmployees: result.results.length,
+        changesCount: changes.total,
+        becameEligibleCount: changes.becameEligible.length,
+        becameIneligibleCount: changes.becameIneligible.length,
+        unchangedCount: changes.unchanged,
+        errorsCount: changes.errors.length,
+        executionTime: executionTime,
+        details: JSON.stringify(changes)
+      });
+      
+      // Return enhanced result with change information
+      return {
+        success: true,
+        message: `Processed ${result.results.length} employees. ${changes.total} changes made (${changes.becameEligible.length} became eligible, ${changes.becameIneligible.length} became ineligible).`,
+        changes: changes,
+        executionTime: `${executionTime.toFixed(2)} seconds`,
+        timestamp: new Date().toISOString()
+      };
+    } else {
+      // Log the error
+      Logger.log(`Error in calculation: ${result.message}`);
+      return result;
+    }
+  } catch (error) {
+    const errorMessage = `Error in updateAllEmployeeProfitSharingEligibility: ${error.toString()}`;
+    Logger.log(errorMessage);
+    return { 
+      success: false, 
+      message: errorMessage,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Logs the update operation to a dedicated log sheet in the spreadsheet
+ * @param {Object} logData - Data to log
+ */
+function logUpdateToSpreadsheet(logData) {
+  try {
+    // Get or create log sheet
+    let logSheet = ss.getSheetByName('Profit Sharing Eligibility Logs');
+    if (!logSheet) {
+      logSheet = ss.insertSheet('Profit Sharing Eligibility Logs');
+      // Add headers
+      logSheet.appendRow([
+        'Timestamp', 
+        'Total Employees', 
+        'Changes', 
+        'Became Eligible', 
+        'Became Ineligible', 
+        'Unchanged',
+        'Errors',
+        'Execution Time (s)',
+        'Details'
+      ]);
+      
+      // Format the header row
+      logSheet.getRange(1, 1, 1, 9).setFontWeight('bold');
+    }
+    
+    // Format timestamp
+    const formattedTimestamp = Utilities.formatDate(
+      logData.timestamp, 
+      Session.getScriptTimeZone(), 
+      "MM/dd/yyyy HH:mm:ss"
+    );
+    
+    // Add log entry
+    logSheet.appendRow([
+      formattedTimestamp,
+      logData.totalEmployees,
+      logData.changesCount,
+      logData.becameEligibleCount,
+      logData.becameIneligibleCount,
+      logData.unchangedCount,
+      logData.errorsCount,
+      logData.executionTime.toFixed(2),
+      logData.details
+    ]);
+    
+    // Auto-resize columns for better readability
+    logSheet.autoResizeColumns(1, 9);
+    
+    Logger.log("Update logged to spreadsheet successfully");
+  } catch (error) {
+    Logger.log(`Error logging to spreadsheet: ${error.toString()}`);
+  }
+}
+
+
+
+function createDailyTrigger() {
+  ScriptApp.newTrigger('updateAllEmployeeProfitSharingEligibility')
+    .timeBased()
+    .everyDays(1)
+    .atHour(1) // Run at 1 AM
+    .create();
+}
+
+/**
+ * Updates profit sharing information for a pay period
+ * @param {string} payPeriodId - The ID of the pay period
+ * @param {number} profitSharingAmount - Total profit sharing amount to distribute
+ * @return {Object} Result of the operation
+ */
+function updateProfitSharingInfo(payPeriodId, profitSharingAmount) {
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      return { success: false, message: "Failed to initialize spreadsheet" };
+    }
+    
+    // Get pay periods sheet
+    const payPeriodsSheet = ss.getSheetByName('Pay Periods');
+    if (!payPeriodsSheet) {
+      return { success: false, message: "Pay Periods sheet not found" };
+    }
+    
+    // Find the pay period row
+    const payPeriodsData = payPeriodsSheet.getDataRange().getValues();
+    let payPeriodRowIndex = -1;
+    
+    for (let i = 1; i < payPeriodsData.length; i++) {
+      if (payPeriodsData[i][0] == payPeriodId) {
+        payPeriodRowIndex = i + 1; // +1 because sheet rows are 1-indexed
+        break;
+      }
+    }
+    
+    if (payPeriodRowIndex === -1) {
+      return { success: false, message: "Pay period not found" };
+    }
+    
+    // Get eligible employees for profit sharing
+    const eligibleEmployees = getEligibleEmployeesForProfitSharing();
+    
+    // Calculate profit sharing details
+    const numRecipients = eligibleEmployees.length;
+    let amountPerRecipient = 0;
+    let recipientNames = "";
+    
+    if (numRecipients > 0 && profitSharingAmount > 0) {
+      amountPerRecipient = profitSharingAmount / numRecipients;
+      recipientNames = eligibleEmployees.map(emp => `${emp.firstName} ${emp.lastName}`).join(", ");
+    }
+    
+    // Update the pay period with profit sharing information
+    payPeriodsSheet.getRange(payPeriodRowIndex, 9).setValue(profitSharingAmount); // Column I: Total Profit Sharing Amount
+    payPeriodsSheet.getRange(payPeriodRowIndex, 10).setValue(numRecipients); // Column J: # of Profit Sharing Recipients
+    payPeriodsSheet.getRange(payPeriodRowIndex, 11).setValue(amountPerRecipient); // Column K: Amount per Recipient
+    payPeriodsSheet.getRange(payPeriodRowIndex, 12).setValue(recipientNames); // Column L: Names of Recipients
+    
+    return {
+      success: true,
+      message: "Profit sharing information updated successfully",
+      numRecipients: numRecipients,
+      amountPerRecipient: amountPerRecipient,
+      totalAmount: profitSharingAmount
+    };
+    
+  } catch (error) {
+    Logger.log("Error in updateProfitSharingInfo: " + error.toString());
+    return { success: false, message: error.toString() };
+  }
+}
+
+/**
+ * Gets employees eligible for profit sharing
+ * @return {Array} Array of eligible employees
+ */
+function getEligibleEmployeesForProfitSharing() {
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      return [];
+    }
+    
+    // Get employee sheet
+    const employeeSheet = ss.getSheetByName('Employee Master Data');
+    if (!employeeSheet) {
+      return [];
+    }
+    
+    const employeeData = employeeSheet.getDataRange().getValues();
+    const eligibleEmployees = [];
+    
+    // Find the column index for "Eligible for Profit Sharing" (should be column V)
+    const headers = employeeData[0];
+    const eligibilityIdx = headers.indexOf('Eligible for Profit Sharing');
+    const statusIdx = headers.indexOf('Status');
+    
+    if (eligibilityIdx === -1) {
+      Logger.log("Eligible for Profit Sharing column not found");
+      return [];
+    }
+    
+    // Find eligible active employees
+    for (let i = 1; i < employeeData.length; i++) {
+      // Check if employee is active and eligible for profit sharing
+      if (
+        employeeData[i][statusIdx] === 'Active' && 
+        employeeData[i][eligibilityIdx] === 'Yes'
+      ) {
+        eligibleEmployees.push({
+          employeeId: employeeData[i][0],
+          firstName: employeeData[i][1],
+          lastName: employeeData[i][2]
+        });
+      }
+    }
+    
+    return eligibleEmployees;
+    
+  } catch (error) {
+    Logger.log("Error in getEligibleEmployeesForProfitSharing: " + error.toString());
+    return [];
+  }
+}
+
+/**
+ * Gets profit sharing information for a pay period
+ * @param {string} payPeriodId - The ID of the pay period
+ * @return {Object} Profit sharing information
+ */
+function getProfitSharingInfo(payPeriodId) {
+  try {
+    // Make sure spreadsheet is initialized
+    if (!initSpreadsheet()) {
+      return { success: false, message: "Failed to initialize spreadsheet" };
+    }
+    
+    // Get pay periods sheet
+    const payPeriodsSheet = ss.getSheetByName('Pay Periods');
+    if (!payPeriodsSheet) {
+      return { success: false, message: "Pay Periods sheet not found" };
+    }
+    
+    // Find the pay period row
+    const payPeriodsData = payPeriodsSheet.getDataRange().getValues();
+    
+    for (let i = 1; i < payPeriodsData.length; i++) {
+      if (payPeriodsData[i][0] == payPeriodId) {
+        return {
+          success: true,
+          totalAmount: payPeriodsData[i][8] || 0, // Column I: Total Profit Sharing Amount
+          numRecipients: payPeriodsData[i][9] || 0, // Column J: # of Profit Sharing Recipients
+          amountPerRecipient: payPeriodsData[i][10] || 0, // Column K: Amount per Recipient
+          recipientNames: payPeriodsData[i][11] || "" // Column L: Names of Recipients
+        };
+      }
+    }
+    
+    return { success: false, message: "Pay period not found" };
+    
+  } catch (error) {
+    Logger.log("Error in getProfitSharingInfo: " + error.toString());
+    return { success: false, message: error.toString() };
   }
 }

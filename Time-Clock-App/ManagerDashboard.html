@@ -452,7 +452,7 @@ tr:hover .flagged-log {
                   <div class="col-md-3">
                     <select id="status-filter" class="form-select">
                       <option value="all">All Statuses</option>
-                      <option value="Active">Active</option>
+                      <option value="Active" selected>Active</option>
                       <option value="Inactive">Inactive</option>
                     </select>
                   </div>
@@ -572,6 +572,54 @@ tr:hover .flagged-log {
                       <input type="text" class="form-control" id="shift-id" readonly>
                     </div>
                   </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label for="company" class="form-label">Company</label>
+                      <select class="form-select" id="company">
+                        <option value="">Not Set</option>
+                        <option value="Humboldt">Humboldt</option>
+                        <option value="Trigger2a">Trigger2a</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="employment-type" class="form-label">Employment Type</label>
+                      <select class="form-select" id="employment-type">
+                        <option value="">Not Set</option>
+                        <option value="W-4">W-4</option>
+                        <option value="Independent Contractor">Independent Contractor</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label for="schedule-type" class="form-label">Schedule Type</label>
+                      <select class="form-select" id="schedule-type">
+                        <option value="">Not Set</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="payment-type" class="form-label">Payment Type</label>
+                      <select class="form-select" id="payment-type">
+                        <option value="">Not Set</option>
+                        <option value="Hourly">Hourly</option>
+                        <option value="Salary">Salary</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label for="hourly-rate" class="form-label">Hourly Rate</label>
+                      <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" id="hourly-rate" step="0.01" min="0">
+                      </div>
+                    </div>
+                  </div>
                   
                   <div class="d-flex justify-content-end mt-4">
                     <button type="button" class="btn btn-secondary me-2" id="cancel-form">Cancel</button>
@@ -647,7 +695,9 @@ tr:hover .flagged-log {
             </div>
           </div>
           
-          <!-- Edit Time Log Modal -->
+        
+
+<!-- Edit Time Log Modal with Clear Buttons - Updated Layout -->
 <div class="modal fade" id="editTimeLogModal" tabindex="-1" aria-labelledby="editTimeLogModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -667,24 +717,49 @@ tr:hover .flagged-log {
               <label for="employeeName" class="form-label">Employee</label>
               <input type="text" class="form-control" id="employeeName" readonly>
             </div>
-            <div class="col-md-3">
-              <label for="date" class="form-label">Date</label>
-              <input type="text" class="form-control flatpickr-date" id="date">
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
               <label for="status" class="form-label">Status</label>
               <input type="text" class="form-control" id="status" readonly>
             </div>
           </div>
           
           <div class="row mb-3">
+            <!-- Clock In Date and Time - Vertical Layout -->
             <div class="col-md-6">
-              <label for="clockInTime" class="form-label">Clock In Time</label>
-              <input type="time" class="form-control" id="clockInTime" autocomplete="off">
+              <label class="form-label">Clock In</label>
+              <div class="input-group mb-2">
+                <span class="input-group-text" style="width: 80px;">Date</span>
+                <input type="date" class="form-control" id="clockInDate" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="clockInDate">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text" style="width: 80px;">Time</span>
+                <input type="time" class="form-control" id="clockInTime" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="clockInTime">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
             </div>
+            
+            <!-- Clock Out Date and Time - Vertical Layout -->
             <div class="col-md-6">
-              <label for="clockOutTime" class="form-label">Clock Out Time</label>
-              <input type="time" class="form-control" id="clockOutTime" autocomplete="off">
+              <label class="form-label">Clock Out</label>
+              <div class="input-group mb-2">
+                <span class="input-group-text" style="width: 80px;">Date</span>
+                <input type="date" class="form-control" id="clockOutDate" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="clockOutDate">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text" style="width: 80px;">Time</span>
+                <input type="time" class="form-control" id="clockOutTime" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="clockOutTime">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
             </div>
           </div>
           
@@ -692,23 +767,35 @@ tr:hover .flagged-log {
             <div class="col-md-6">
               <label class="form-label">Regular Break 1</label>
               <div class="input-group mb-2">
-                <span class="input-group-text">Start</span>
+                <span class="input-group-text" style="width: 80px;">Start</span>
                 <input type="time" class="form-control" id="regularBreakStart1" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="regularBreakStart1">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
               <div class="input-group">
-                <span class="input-group-text">End</span>
+                <span class="input-group-text" style="width: 80px;">End</span>
                 <input type="time" class="form-control" id="regularBreakEnd1" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="regularBreakEnd1">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Regular Break 2</label>
               <div class="input-group mb-2">
-                <span class="input-group-text">Start</span>
+                <span class="input-group-text" style="width: 80px;">Start</span>
                 <input type="time" class="form-control" id="regularBreakStart2" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="regularBreakStart2">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
               <div class="input-group">
-                <span class="input-group-text">End</span>
+                <span class="input-group-text" style="width: 80px;">End</span>
                 <input type="time" class="form-control" id="regularBreakEnd2" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="regularBreakEnd2">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -717,17 +804,21 @@ tr:hover .flagged-log {
             <div class="col-md-6">
               <label class="form-label">Lunch Break</label>
               <div class="input-group mb-2">
-                <span class="input-group-text">Start</span>
+                <span class="input-group-text" style="width: 80px;">Start</span>
                 <input type="time" class="form-control" id="lunchBreakStart" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="lunchBreakStart">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
               <div class="input-group">
-                <span class="input-group-text">End</span>
+                <span class="input-group-text" style="width: 80px;">End</span>
                 <input type="time" class="form-control" id="lunchBreakEnd" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary clear-field" data-target="lunchBreakEnd">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
           </div>
-          
-          <!-- Removed the "Missed minutes" section as requested -->
         </form>
       </div>
       <div class="modal-footer">
@@ -737,6 +828,7 @@ tr:hover .flagged-log {
     </div>
   </div>
 </div>
+
 
 
 
@@ -946,12 +1038,19 @@ tr:hover .flagged-log {
       </div>
       
       <!-- Pay Period Section -->
-      <div id="payPeriodSection" class="row mb-3" style="display: none;">
+      <div id="payPeriodSection" class="row mb-3">
         <div class="col-md-6">
           <label for="payPeriod" class="form-label">Select Pay Period</label>
           <select class="form-select" id="payPeriod">
             <option value="">Loading pay periods...</option>
           </select>
+        </div>
+        <div class="col-md-6">
+          <label for="profitSharingAmount" class="form-label">Total Profit Sharing Amount</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" class="form-control" id="profitSharingAmount" min="0" step="0.01" placeholder="Enter amount to distribute">
+          </div>
         </div>
       </div>
       
@@ -988,12 +1087,13 @@ tr:hover .flagged-log {
           <table class="table table-striped table-hover table-responsive">
             <thead>
               <tr>
-                <th style="width: 15%;">Employee Name</th>
-                <th style="width: 17%;">Total Hours Worked</th>
-                <th style="width: 18%;">Regular Break Time (hrs)</th>
-                <th style="width: 17%;">Lunch Break Time (hrs)</th>
-                <th style="width: 20%;">Shifts w/ Qualifying Paid Breaks</th>
-                <th style="width: 30%;">Total Hours w/ Paid Breaks</th>
+                <th style="width: 20%;">Employee Name</th>
+                <th style="width: 15%;">Employment Type</th>
+                <th style="width: 10%;">Hourly Rate</th>
+                <th style="width: 12%;">Regular Hours</th>
+                <th style="width: 12%;">Overtime Hours</th>
+                <th style="width: 15%;">Paid Break Hours</th>
+                <th style="width: 16%;">Profit Sharing $</th>
               </tr>
             </thead>
             <tbody id="reportTableBody">
@@ -1241,6 +1341,25 @@ tr:hover .flagged-log {
           initReportsTab();
 }
 
+// Initialize clear buttons for time log form fields
+function initializeClearButtons() {
+  document.querySelectorAll('.clear-field').forEach(button => {
+    button.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const targetField = document.getElementById(targetId);
+      
+      if (targetField) {
+        targetField.value = '';
+        
+        // If this is a flatpickr field, we need to update the flatpickr instance
+        if (targetField._flatpickr) {
+          targetField._flatpickr.clear();
+        }
+      }
+    });
+  });
+}
+
 // Initialize date/time pickers
 function initializeDateTimePickers() {
   // Initialize date pickers
@@ -1282,34 +1401,44 @@ function initializeDateTimePickers() {
       }
       
       // Show Edit Employee Form
-      function showEditEmployeeForm(employeeId) {
-        // Find employee data
-        const employee = employees.find(emp => emp.id == employeeId);
-        if (!employee) return;
-        
-        // Hide employee list
-        document.getElementById('employees-tab').style.display = 'none';
-        
-        // Show form
-        const formSection = document.getElementById('employee-form-section');
-        formSection.style.display = 'block';
-        
-        // Set form title
-        document.getElementById('form-title').textContent = 'Edit Employee';
-        
-        // Populate form fields
-        document.getElementById('employee-id').value = employee.id;
-        document.getElementById('first-name').value = employee.firstName || '';
-        document.getElementById('last-name').value = employee.lastName || '';
-        document.getElementById('department').value = employee.department || '';
-        document.getElementById('email').value = employee.email || '';
-        document.getElementById('pin').value = employee.pin || '';
-        document.getElementById('manager-email').value = employee.managerEmail || '';
-        document.getElementById('hire-date').value = formatDateForInput(employee.hireDate) || '';
-        document.getElementById('status').value = employee.status || 'Active';
-        document.getElementById('shift').value = employee.shift || '';
-        document.getElementById('shift-id').value = employee.shiftId || '';
-      }
+function showEditEmployeeForm(employeeId) {
+  
+  
+  
+  // Find employee data
+  const employee = employees.find(emp => emp.id == employeeId);
+  if (!employee) return;
+  
+  // Hide employee list
+  document.getElementById('employees-tab').style.display = 'none';
+  
+  // Show form
+  const formSection = document.getElementById('employee-form-section');
+  formSection.style.display = 'block';
+  
+  // Set form title
+  document.getElementById('form-title').textContent = 'Edit Employee';
+  
+  // Populate form fields
+  document.getElementById('employee-id').value = employee.id;
+  document.getElementById('first-name').value = employee.firstName || '';
+  document.getElementById('last-name').value = employee.lastName || '';
+  document.getElementById('department').value = employee.department || '';
+  document.getElementById('email').value = employee.email || '';
+  document.getElementById('pin').value = employee.pin || '';
+  document.getElementById('manager-email').value = employee.managerEmail || '';
+  document.getElementById('hire-date').value = formatDateForInput(employee.hireDate) || '';
+  document.getElementById('status').value = employee.status || 'Active';
+  document.getElementById('shift').value = employee.shift || '';
+  document.getElementById('shift-id').value = employee.shiftId || '';
+  
+  // Populate new fields
+  document.getElementById('company').value = employee.company || '';
+  document.getElementById('employment-type').value = employee.employmentType || '';
+  document.getElementById('schedule-type').value = employee.scheduleType || '';
+  document.getElementById('payment-type').value = employee.paymentType || '';
+  document.getElementById('hourly-rate').value = employee.hourlyRate || '';
+}
       
       // Hide Employee Form
       function hideEmployeeForm() {
@@ -1339,46 +1468,59 @@ function initializeDateTimePickers() {
       }
       
       // Handle form submission
-      function handleEmployeeFormSubmit(e) {
-        e.preventDefault();
-        
-        // Show loading spinner
-        showLoading();
-        
-        // Get form data
-        const employeeId = document.getElementById('employee-id').value;
-        const firstName = document.getElementById('first-name').value;
-        const lastName = document.getElementById('last-name').value;
-        const department = document.getElementById('department').value;
-        const email = document.getElementById('email').value;
-        const pin = document.getElementById('pin').value;
-        const managerEmail = document.getElementById('manager-email').value;
-        const hireDate = document.getElementById('hire-date').value;
-        const status = document.getElementById('status').value;
-        const shift = document.getElementById('shift').value;
-        const shiftId = document.getElementById('shift-id').value;
-        
-        // Prepare employee data
-        const employeeData = {
-          id: employeeId || 'NEW', // 'NEW' indicates a new employee
-          firstName,
-          lastName,
-          department,
-          email,
-          pin,
-          managerEmail,
-          hireDate,
-          status,
-          shift,
-          shiftId
-        };
-        
-        // Call Google Apps Script function to save employee
-        google.script.run
-          .withSuccessHandler(onEmployeeSaved)
-          .withFailureHandler(onSaveError)
-          .saveEmployee(employeeData);
-      }
+function handleEmployeeFormSubmit(e) {
+  e.preventDefault();
+  
+  // Show loading spinner
+  showLoading();
+  
+  // Get form data
+  const employeeId = document.getElementById('employee-id').value;
+  const firstName = document.getElementById('first-name').value;
+  const lastName = document.getElementById('last-name').value;
+  const department = document.getElementById('department').value;
+  const email = document.getElementById('email').value;
+  const pin = document.getElementById('pin').value;
+  const managerEmail = document.getElementById('manager-email').value;
+  const hireDate = document.getElementById('hire-date').value;
+  const status = document.getElementById('status').value;
+  const shift = document.getElementById('shift').value;
+  const shiftId = document.getElementById('shift-id').value;
+  
+  // Get new field values
+  const company = document.getElementById('company').value;
+  const employmentType = document.getElementById('employment-type').value;
+  const scheduleType = document.getElementById('schedule-type').value;
+  const paymentType = document.getElementById('payment-type').value;
+  const hourlyRate = document.getElementById('hourly-rate').value;
+  
+  // Prepare employee data
+  const employeeData = {
+    id: employeeId || 'NEW', // 'NEW' indicates a new employee
+    firstName,
+    lastName,
+    department,
+    email,
+    pin,
+    managerEmail,
+    hireDate,
+    status,
+    shift,
+    shiftId,
+    // Add new fields
+    company,
+    employmentType,
+    scheduleType,
+    paymentType,
+    hourlyRate
+  };
+  
+  // Call Google Apps Script function to save employee
+  google.script.run
+    .withSuccessHandler(onEmployeeSaved)
+    .withFailureHandler(onSaveError)
+    .saveEmployee(employeeData);
+}
       
       // Handle successful save
       function onEmployeeSaved(result) {
@@ -1702,54 +1844,112 @@ function loadTimeLogs() {
     .getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter);
 }
       
-      // Open edit modal with time log data
-      function openEditModal(logData) {
-        // Populate form fields
-        document.getElementById('rowIndex').value = logData.rowIndex;
-        document.getElementById('logId').value = logData.logId;
-        document.getElementById('employeeId').value = logData.employeeId;
-        document.getElementById('employeeName').value = logData.employeeName;
-        document.getElementById('date').value = logData.date;
-        document.getElementById('status').value = logData.status;
-        document.getElementById('clockInTime').value = logData.clockInTime;
-        document.getElementById('clockOutTime').value = logData.clockOutTime;
-        document.getElementById('regularBreakStart1').value = logData.regularBreakStart1;
-        document.getElementById('regularBreakEnd1').value = logData.regularBreakEnd1;
-        document.getElementById('regularBreakStart2').value = logData.regularBreakStart2;
-        document.getElementById('regularBreakEnd2').value = logData.regularBreakEnd2;
-        document.getElementById('lunchBreakStart').value = logData.lunchBreakStart;
-        document.getElementById('lunchBreakEnd').value = logData.lunchBreakEnd;
-        
-        // Reinitialize time pickers
-        initializeDateTimePickers();
-        
-        // Show modal
-        editTimeLogModal.show();
-      }
-      
-      // Save time log changes
-      function saveTimeLog() {
-        showLoading();
+// Open edit modal with time log data
+function openEditModal(logData) {
+  // Populate form fields
+  document.getElementById('rowIndex').value = logData.rowIndex;
+  document.getElementById('logId').value = logData.logId;
+  document.getElementById('employeeId').value = logData.employeeId;
+  document.getElementById('employeeName').value = logData.employeeName;
+  document.getElementById('status').value = logData.status;
 
-        const rowIndex = document.getElementById('rowIndex').value;
-        const timeLogData = {
-          logId: document.getElementById('logId').value,
-          date: document.getElementById('date').value,
-          status: clockInTime && clockOutTime ? "Complete" : "Incomplete",
-          clockInTime: document.getElementById('clockInTime').value,
-          clockOutTime: document.getElementById('clockOutTime').value,
-          regularBreakStart1: document.getElementById('regularBreakStart1').value,
-          regularBreakEnd1: document.getElementById('regularBreakEnd1').value,
-          regularBreakStart2: document.getElementById('regularBreakStart2').value,
-          regularBreakEnd2: document.getElementById('regularBreakEnd2').value,
-          lunchBreakStart: document.getElementById('lunchBreakStart').value,
-          lunchBreakEnd: document.getElementById('lunchBreakEnd').value
-        };
-        
-        google.script.run
+  // Parse the date from logData.date
+  const baseDate = logData.date;
+
+  // Set Clock In Date and Time
+  if (logData.clockInTime) {
+    const clockInDateTime = new Date(`${baseDate}T${logData.clockInTime}`);
+    document.getElementById('clockInDate').value = baseDate;
+    document.getElementById('clockInTime').value = logData.clockInTime;
+  } else {
+    document.getElementById('clockInDate').value = '';
+    document.getElementById('clockInTime').value = '';
+  }
+
+  // Set Clock Out Date and Time
+  if (logData.clockOutTime) {
+    const clockOutDateTime = new Date(`${baseDate}T${logData.clockOutTime}`);
+    document.getElementById('clockOutDate').value = baseDate;
+    document.getElementById('clockOutTime').value = logData.clockOutTime;
+  } else {
+    document.getElementById('clockOutDate').value = '';
+    document.getElementById('clockOutTime').value = '';
+  }
+
+  // Set break times
+  document.getElementById('regularBreakStart1').value = logData.regularBreakStart1 || '';
+  document.getElementById('regularBreakEnd1').value = logData.regularBreakEnd1 || '';
+  document.getElementById('regularBreakStart2').value = logData.regularBreakStart2 || '';
+  document.getElementById('regularBreakEnd2').value = logData.regularBreakEnd2 || '';
+  document.getElementById('lunchBreakStart').value = logData.lunchBreakStart || '';
+  document.getElementById('lunchBreakEnd').value = logData.lunchBreakEnd || '';
+
+// Initialize clear buttons
+initializeClearButtons();
+  
+  // Show modal
+  editTimeLogModal.show();
+}
+      
+
+// Save time log changes
+function saveTimeLog() {
+  showLoading();
+
+  const rowIndex = document.getElementById('rowIndex').value;
+  
+  // Get date and time values
+  const clockInDate = document.getElementById('clockInDate').value;
+  const clockInTime = document.getElementById('clockInTime').value;
+  const clockOutDate = document.getElementById('clockOutDate').value;
+  const clockOutTime = document.getElementById('clockOutTime').value;
+  
+  // Log the form data to the console
+  console.log("Form data being collected:");
+  console.log("Clock In Date:", clockInDate);
+  console.log("Clock In Time:", clockInTime);
+  console.log("Clock Out Date:", clockOutDate || clockInDate);
+  console.log("Clock Out Time:", clockOutTime);
+  
+  // Create the time log data object - explicitly set empty strings for cleared fields
+  const timeLogData = {
+    logId: document.getElementById('logId').value,
+    date: clockInDate, // This is the original date field
+    clockInTime: clockInTime,
+    clockOutTime: clockOutTime,
+    regularBreakStart1: document.getElementById('regularBreakStart1').value,
+    regularBreakEnd1: document.getElementById('regularBreakEnd1').value,
+    regularBreakStart2: document.getElementById('regularBreakStart2').value,
+    regularBreakEnd2: document.getElementById('regularBreakEnd2').value,
+    lunchBreakStart: document.getElementById('lunchBreakStart').value,
+    lunchBreakEnd: document.getElementById('lunchBreakEnd').value,
+    
+    // Add the date fields for proper date handling
+    clockInDate: clockInDate,
+    clockOutDate: clockOutDate,
+    
+    // Add a flag to indicate fields that were explicitly cleared
+    clearedFields: {
+      clockInTime: clockInTime === '',
+      clockOutTime: clockOutTime === '',
+      clockInDate: clockInDate === '',
+      clockOutDate: clockOutDate === '',
+      regularBreakStart1: document.getElementById('regularBreakStart1').value === '',
+      regularBreakEnd1: document.getElementById('regularBreakEnd1').value === '',
+      regularBreakStart2: document.getElementById('regularBreakStart2').value === '',
+      regularBreakEnd2: document.getElementById('regularBreakEnd2').value === '',
+      lunchBreakStart: document.getElementById('lunchBreakStart').value === '',
+      lunchBreakEnd: document.getElementById('lunchBreakEnd').value === ''
+    }
+  };
+  
+  // Log the data being sent to the server
+  console.log("Time log data being sent to server:", timeLogData);
+
+  google.script.run
     .withSuccessHandler(function(response) {
+      console.log("Server response:", response);
       if (response.success) {
-        // Close modal and reload data
         editTimeLogModal.hide();
         loadTimeLogs();
         showAlert('success', 'Time log updated successfully');
@@ -1759,10 +1959,29 @@ function loadTimeLogs() {
       }
     })
     .withFailureHandler(function(error) {
+      console.error("Server error:", error);
       handleError(error);
       hideLoading();
     })
     .updateTimeLog(rowIndex, timeLogData);
+}
+
+
+// Helper function to combine date and time
+function combineDateTime(date, time) {
+  if (!date || !time) return '';
+  
+  // Parse the date (assuming format YYYY-MM-DD)
+  const [year, month, day] = date.split('-');
+  
+  // Parse the time (assuming format HH:MM or HH:MM:SS)
+  const timeParts = time.split(':');
+  const hours = timeParts[0];
+  const minutes = timeParts[1];
+  const seconds = timeParts[2] || '00';
+  
+  // Format directly to MM/DD/YYYY HH:MM:SS
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 }
       
       // Show alert message
@@ -1803,14 +2022,10 @@ function showCreateTimeLogModal() {
   // Set default date to today
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('newLogClockInDate').value = today;
-  document.getElementById('newLogClockOutDate').value = today;
+  document.getElementById('newLogClockOutDate').value = "";
   
-  // Set default time to now
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const currentTime = `${hours}:${minutes}`;
-  document.getElementById('newLogClockInTime').value = currentTime;
+  // Set default time to null
+  document.getElementById('newLogClockInTime').value = "";
   
   // Populate employee dropdown
   const employeeSelect = document.getElementById('newLogEmployeeId');
@@ -1918,6 +2133,7 @@ function onTimeLogCreationError(error) {
       window.onload = function() {
   initializeDashboard();
   initOperatorAttendanceTab();
+  initializeClearButtons(); 
 };
 
 
@@ -1966,7 +2182,7 @@ $(document).ready(function() {
   });
 });
 
-// Initialize the Reports Tab
+// Initialize the Reports TabA
 function initReportsTab() {
   // Set default dates
   const today = new Date();
@@ -2000,6 +2216,24 @@ function initReportsTab() {
   // Export button click handlers
   document.getElementById('exportCsv').addEventListener('click', exportReportToCsv);
   document.getElementById('exportPdf').addEventListener('click', exportReportToPdf);
+  
+  // Add event listener for pay period change to load profit sharing info
+  document.getElementById('payPeriod').addEventListener('change', loadProfitSharingInfo);
+  
+  // Add a "Save Profit Sharing" button
+  const profitSharingContainer = document.createElement('div');
+  profitSharingContainer.className = 'col-md-12 text-end mt-2';
+  profitSharingContainer.innerHTML = `
+    <button id="saveProfitSharing" class="btn btn-outline-primary">
+      <i class="fas fa-save me-1"></i> Save Profit Sharing
+    </button>
+  `;
+  
+  const payPeriodSection = document.getElementById('payPeriodSection');
+  payPeriodSection.appendChild(profitSharingContainer);
+  
+  // Add event listener for the Save Profit Sharing button
+  document.getElementById('saveProfitSharing').addEventListener('click', handleProfitSharing);
 }
 
 
@@ -2058,10 +2292,7 @@ function loadPayPeriods() {
 }
 
 
-/**
- * Generates the employee time report
- */
- function generateReport() {
+function generateReport() {
   const reportLoading = document.getElementById('reportLoading');
   const reportTableBody = document.getElementById('reportTableBody');
   
@@ -2102,14 +2333,15 @@ function loadPayPeriods() {
   // First, ensure the table has the correct headers
   const headerRow = document.querySelector('#reportTable thead tr');
   if (headerRow) {
-    // Clear existing headers and add all 6 columns with correct names
+    // Update headers for the new format
     headerRow.innerHTML = `
       <th>Employee Name</th>
-      <th>Total Hours Worked</th>
-      <th>Regular Break Time</th>
-      <th>Lunch Break Time</th>
-      <th>Shifts with Qualifying Paid Breaks</th>
-      <th>Total Hours with Paid Breaks</th>
+      <th>Employment Type</th>
+      <th>Hourly Rate</th>
+      <th>Regular Hours</th>
+      <th>Overtime Hours</th>
+      <th>Paid Break Hours</th>
+      <th>Profit Sharing $</th>
     `;
   }
   
@@ -2118,7 +2350,7 @@ function loadPayPeriods() {
     google.script.run
       .withSuccessHandler(function(qualifyingShiftData) {
         // Once we have the qualifying shift data, get the time report
-        getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData);
+        getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData, payPeriodId);
       })
       .withFailureHandler(function(error) {
         reportLoading.style.display = 'none';
@@ -2127,17 +2359,17 @@ function loadPayPeriods() {
       .calculateEmployeeQualifyingShifts(payPeriodId);
   } else {
     // If using custom date range, just get the time report without qualifying shift data
-    getTimeReport(startDate, startTime, endDate, endTime, null);
+    getTimeReport(startDate, startTime, endDate, endTime, null, null);
   }
   
   // Function to get the time report data and combine with qualifying shift data
-  function getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData) {
+  function getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData, payPeriodId) {
     google.script.run
       .withSuccessHandler(function(reportData) {
         reportLoading.style.display = 'none';
         
         if (!reportData || reportData.length === 0) {
-          reportTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data found for the selected date range</td></tr>';
+          reportTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No data found for the selected date range</td></tr>';
           return;
         }
         
@@ -2149,78 +2381,23 @@ function loadPayPeriods() {
           });
         }
         
-        // Populate report table
-        reportData.forEach(function(row) {
-          const tr = document.createElement('tr');
-          
-          // Employee Name
-          const nameCell = document.createElement('td');
-          nameCell.textContent = row.employeeName;
-          tr.appendChild(nameCell);
-          
-          // Total Hours Worked
-          const hoursWorkedCell = document.createElement('td');
-          const totalHoursWorked = parseFloat(row.totalHoursWorked);
-          hoursWorkedCell.textContent = totalHoursWorked.toFixed(2);
-          tr.appendChild(hoursWorkedCell);
-          
-          // Regular Break Time
-          const regBreakCell = document.createElement('td');
-          regBreakCell.textContent = parseFloat(row.regularBreakTime).toFixed(2);
-          tr.appendChild(regBreakCell);
-          
-          // Lunch Break Time
-          const lunchBreakCell = document.createElement('td');
-          lunchBreakCell.textContent = parseFloat(row.lunchBreakTime).toFixed(2);
-          tr.appendChild(lunchBreakCell);
-          
-          // Shifts with Qualifying Paid Breaks
-          const qualifyingShiftsCell = document.createElement('td');
-          
-          // Check if employee has exactly 80 hours - use same condition as for paid break hours
-          if (Math.abs(totalHoursWorked - 80.0) > 0.01) {
-            // Employee doesn't have exactly 80 hours, show qualifying shifts
-            let qualifyingShiftsWithPaidBreaks = 0;
-            
-            // Use server-side data if available, otherwise fall back to client-side calculation
-            if (qualifyingShiftMap[row.employeeId]) {
-              qualifyingShiftsWithPaidBreaks = qualifyingShiftMap[row.employeeId].qualifyingShiftsWithPaidBreaks;
-            } 
-            
-            qualifyingShiftsCell.textContent = qualifyingShiftsWithPaidBreaks;
-          } else {
-            // Employee already has exactly 80 hours, display "-"
-            qualifyingShiftsCell.textContent = "-";
-          }
-          tr.appendChild(qualifyingShiftsCell);
-          
-          // Total Hours with Paid Breaks
-          const paidBreaksCell = document.createElement('td');
-          let totalWithPaidBreaks = totalHoursWorked;
-          
-          // Only apply paid break calculation if employee doesn't have exactly 80 hours
-          if (Math.abs(totalHoursWorked - 80.0) > 0.01) {  // Using epsilon comparison for floating point
-            // Add 0.5 hours (30 minutes) for each qualifying shift with paid breaks
-            let qualifyingShiftsWithPaidBreaks = 0;
-            
-            // Use server-side data if available, otherwise fall back to client-side calculation
-            if (qualifyingShiftMap[row.employeeId]) {
-              qualifyingShiftsWithPaidBreaks = qualifyingShiftMap[row.employeeId].qualifyingShiftsWithPaidBreaks;
-            }
-            
-            const paidBreakHours = qualifyingShiftsWithPaidBreaks * 0.5;
-            totalWithPaidBreaks += paidBreakHours;
-          }
-          
-          paidBreaksCell.textContent = totalWithPaidBreaks.toFixed(2);
-          tr.appendChild(paidBreaksCell);
-          
-          reportTableBody.appendChild(tr);
-        });
-        
-        // Enable export buttons after report is generated
-        document.getElementById('exportCsv').disabled = false;
-        document.getElementById('exportPdf').disabled = false;
+        // If we have a pay period ID, get profit sharing information
+        if (payPeriodId) {
+          google.script.run
+            .withSuccessHandler(function(profitSharingInfo) {
+              // Now populate the report with all data including profit sharing
+              populateReport(reportData, qualifyingShiftMap, profitSharingInfo);
+            })
+            .withFailureHandler(function(error) {
+              console.error("Error getting profit sharing info:", error);
+              // Still populate the report, but without profit sharing data
+              populateReport(reportData, qualifyingShiftMap, { success: false });
+            })
+            .getProfitSharingInfo(payPeriodId);
+        } else {
+          // No pay period ID, populate without profit sharing
+          populateReport(reportData, qualifyingShiftMap, { success: false });
+        }
       })
       .withFailureHandler(function(error) {
         reportLoading.style.display = 'none';
@@ -2228,7 +2405,96 @@ function loadPayPeriods() {
       })
       .generateEmployeeTimeReport(startDate, startTime, endDate, endTime);
   }
+  
+  // Function to populate the report table with all data
+  function populateReport(reportData, qualifyingShiftMap, profitSharingInfo) {
+    reportTableBody.innerHTML = '';
+    
+    // Populate report table
+    reportData.forEach(function(row) {
+      const tr = document.createElement('tr');
+      
+      // Employee Name
+      const nameCell = document.createElement('td');
+      nameCell.textContent = row.employeeName;
+      tr.appendChild(nameCell);
+      
+      // Employment Type
+      const empTypeCell = document.createElement('td');
+      empTypeCell.textContent = row.employmentType || '-';
+      tr.appendChild(empTypeCell);
+      
+      // Hourly Rate
+      const hourlyRateCell = document.createElement('td');
+      if (row.hourlyRate) {
+        hourlyRateCell.textContent = '$' + parseFloat(row.hourlyRate).toFixed(2);
+      } else {
+        hourlyRateCell.textContent = '-';
+      }
+      tr.appendChild(hourlyRateCell);
+      
+      // Calculate Regular Hours (capped at 80) and Overtime Hours
+      const totalHoursWorked = parseFloat(row.totalHoursWorked);
+      let regularHours = totalHoursWorked;
+      let overtimeHours = 0;
+      
+      if (totalHoursWorked > 80) {
+        regularHours = 80;
+        overtimeHours = totalHoursWorked - 80;
+      }
+      
+      // Regular Hours
+      const regularHoursCell = document.createElement('td');
+      regularHoursCell.textContent = regularHours.toFixed(2);
+      tr.appendChild(regularHoursCell);
+      
+      // Overtime Hours
+      const overtimeHoursCell = document.createElement('td');
+      overtimeHoursCell.textContent = overtimeHours.toFixed(2);
+      tr.appendChild(overtimeHoursCell);
+      
+      // Paid Break Hours
+      const paidBreakHoursCell = document.createElement('td');
+      
+      // Check if employee has AUTO- logs
+      if (row.hasAutoLogs === true) {
+        // If employee has AUTO- logs, set paid break hours to 0
+        paidBreakHoursCell.textContent = '0.00';
+      } else {
+        // Calculate paid break hours based on qualifying shifts
+        let paidBreakHours = 0;
+        if (qualifyingShiftMap[row.employeeId]) {
+          const qualifyingShifts = qualifyingShiftMap[row.employeeId].qualifyingShiftsWithPaidBreaks || 0;
+          paidBreakHours = qualifyingShifts * 0.5; // 30 minutes (0.5 hours) per qualifying shift
+        }
+        
+        paidBreakHoursCell.textContent = paidBreakHours.toFixed(2);
+      }
+      
+      tr.appendChild(paidBreakHoursCell);
+      
+      // Profit Sharing Amount
+      const profitSharingCell = document.createElement('td');
+      
+      // Check if employee is eligible for profit sharing and we have valid profit sharing info
+      let profitSharingAmount = 0;
+      if (profitSharingInfo && profitSharingInfo.success && row.eligibleForProfitSharing === 'Yes') {
+        profitSharingAmount = parseFloat(profitSharingInfo.amountPerRecipient) || 0;
+        profitSharingCell.textContent = '$' + profitSharingAmount.toFixed(2);
+      } else {
+        profitSharingCell.textContent = '-';
+      }
+      
+      tr.appendChild(profitSharingCell);
+      reportTableBody.appendChild(tr);
+    });
+    
+    // Enable export buttons after report is generated
+    document.getElementById('exportCsv').disabled = false;
+    document.getElementById('exportPdf').disabled = false;
+  }
 }
+
 
 
 
@@ -2271,7 +2537,7 @@ function exportReportToCsv() {
   }
   
   // Updated header row with correct column names
-  let csvContent = "Employee Name,Hours Worked,Regular Break Time,Lunch Break Time,Shifts with Qualifying Paid Breaks,Total Hours with Paid Breaks\n";
+  let csvContent = "Employee Name,Employment Type,Hourly Rate,Regular Hours,Overtime Hours,Paid Break Hours,Profit Sharing $\n";
   
   rows.forEach(row => {
     const cells = row.querySelectorAll('td');
@@ -2301,6 +2567,7 @@ function exportReportToCsv() {
     document.body.removeChild(link);
   }
 }
+
 
 // Update the exportReportToPdf function to properly use the hidden template
 function exportReportToPdf() {
@@ -2395,178 +2662,6 @@ function exportReportToPdf() {
   }
 }
 
-
-/**
- * Generates the employee time report
- */
- function generateReport() {
-  const reportLoading = document.getElementById('reportLoading');
-  const reportTableBody = document.getElementById('reportTableBody');
-  
-  // Disable export buttons initially
-  document.getElementById('exportCsv').disabled = true;
-  document.getElementById('exportPdf').disabled = true;
-  
-  reportLoading.style.display = 'block';
-  reportTableBody.innerHTML = '';
-  
-  let startDate, startTime, endDate, endTime, payPeriodId;
-  
-  // Get date range based on selection type
-  if (document.getElementById('customDateRange').checked) {
-    startDate = document.getElementById('startDate').value;
-    startTime = document.getElementById('startTime').value || '00:00';
-    endDate = document.getElementById('endDate').value;
-    endTime = document.getElementById('endTime').value || '23:59';
-    payPeriodId = null; // No pay period ID for custom date range
-  } else {
-    const selectedOption = document.getElementById('payPeriod').options[document.getElementById('payPeriod').selectedIndex];
-    startDate = selectedOption.dataset.startDate;
-    startTime = selectedOption.dataset.startTime || '00:00';
-    endDate = selectedOption.dataset.endDate;
-    endTime = selectedOption.dataset.endTime || '23:59';
-    payPeriodId = selectedOption.value; // Get the pay period ID from the selected option
-  }
-  
-  // Validate inputs
-  if (!startDate || !endDate) {
-    reportLoading.style.display = 'none';
-    showAlert('danger', 'Please select a valid date range');
-    return;
-  }
-  
-  console.log("Generating report with:", startDate, startTime, endDate, endTime, "Pay Period ID:", payPeriodId);
-  
-  // First, ensure the table has the correct headers
-  const headerRow = document.querySelector('#reportTable thead tr');
-  if (headerRow) {
-    // Clear existing headers and add all 6 columns with correct names
-    headerRow.innerHTML = `
-      <th>Employee Name</th>
-      <th>Total Hours Worked</th>
-      <th>Regular Break Time</th>
-      <th>Lunch Break Time</th>
-      <th>Shifts with Qualifying Paid Breaks</th>
-      <th>Total Hours with Paid Breaks</th>
-    `;
-  }
-  
-  // First, get the qualifying shifts data from the server if using a pay period
-  if (payPeriodId) {
-    google.script.run
-      .withSuccessHandler(function(qualifyingShiftData) {
-        // Once we have the qualifying shift data, get the time report
-        getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData);
-      })
-      .withFailureHandler(function(error) {
-        reportLoading.style.display = 'none';
-        showAlert('danger', 'Error calculating qualifying shifts: ' + error);
-      })
-      .calculateEmployeeQualifyingShifts(payPeriodId);
-  } else {
-    // If using custom date range, just get the time report without qualifying shift data
-    getTimeReport(startDate, startTime, endDate, endTime, null);
-  }
-  
-  // Function to get the time report data and combine with qualifying shift data
-  function getTimeReport(startDate, startTime, endDate, endTime, qualifyingShiftData) {
-    google.script.run
-      .withSuccessHandler(function(reportData) {
-        reportLoading.style.display = 'none';
-        
-        if (!reportData || reportData.length === 0) {
-          reportTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data found for the selected date range</td></tr>';
-          return;
-        }
-        
-        // Create a map of employee IDs to qualifying shift data for quick lookup
-        const qualifyingShiftMap = {};
-        if (qualifyingShiftData && Array.isArray(qualifyingShiftData)) {
-          qualifyingShiftData.forEach(item => {
-            qualifyingShiftMap[item.employeeId] = item;
-          });
-        }
-        
-        // Populate report table
-        reportData.forEach(function(row) {
-          const tr = document.createElement('tr');
-          
-          // Employee Name
-          const nameCell = document.createElement('td');
-          nameCell.textContent = row.employeeName;
-          tr.appendChild(nameCell);
-          
-          // Total Hours Worked
-          const hoursWorkedCell = document.createElement('td');
-          const totalHoursWorked = parseFloat(row.totalHoursWorked);
-          hoursWorkedCell.textContent = totalHoursWorked.toFixed(2);
-          tr.appendChild(hoursWorkedCell);
-          
-          // Regular Break Time
-          const regBreakCell = document.createElement('td');
-          regBreakCell.textContent = parseFloat(row.regularBreakTime).toFixed(2);
-          tr.appendChild(regBreakCell);
-          
-          // Lunch Break Time
-          const lunchBreakCell = document.createElement('td');
-          lunchBreakCell.textContent = parseFloat(row.lunchBreakTime).toFixed(2);
-          tr.appendChild(lunchBreakCell);
-          
-          // Shifts with Qualifying Paid Breaks
-          const qualifyingShiftsCell = document.createElement('td');
-          
-          // Check if employee has exactly 80 hours - use same condition as for paid break hours
-          if (Math.abs(totalHoursWorked - 80.0) > 0.01) {
-            // Employee doesn't have exactly 80 hours, show qualifying shifts
-            let qualifyingShiftsWithPaidBreaks = 0;
-            
-            // Use server-side data if available, otherwise fall back to client-side calculation
-            if (qualifyingShiftMap[row.employeeId]) {
-              qualifyingShiftsWithPaidBreaks = qualifyingShiftMap[row.employeeId].qualifyingShiftsWithPaidBreaks;
-            } 
-            
-            qualifyingShiftsCell.textContent = qualifyingShiftsWithPaidBreaks;
-          } else {
-            // Employee already has exactly 80 hours, display "-"
-            qualifyingShiftsCell.textContent = "-";
-          }
-          tr.appendChild(qualifyingShiftsCell);
-          
-          // Total Hours with Paid Breaks
-          const paidBreaksCell = document.createElement('td');
-          let totalWithPaidBreaks = totalHoursWorked;
-          
-          // Only apply paid break calculation if employee doesn't have exactly 80 hours
-          if (Math.abs(totalHoursWorked - 80.0) > 0.01) {  // Using epsilon comparison for floating point
-            // Add 0.5 hours (30 minutes) for each qualifying shift with paid breaks
-            let qualifyingShiftsWithPaidBreaks = 0;
-            
-            // Use server-side data if available, otherwise fall back to client-side calculation
-            if (qualifyingShiftMap[row.employeeId]) {
-              qualifyingShiftsWithPaidBreaks = qualifyingShiftMap[row.employeeId].qualifyingShiftsWithPaidBreaks;
-            } 
-            
-            const paidBreakHours = qualifyingShiftsWithPaidBreaks * 0.5;
-            totalWithPaidBreaks += paidBreakHours;
-          }
-          
-          paidBreaksCell.textContent = totalWithPaidBreaks.toFixed(2);
-          tr.appendChild(paidBreaksCell);
-          
-          reportTableBody.appendChild(tr);
-        });
-        
-        // Enable export buttons after report is generated
-        document.getElementById('exportCsv').disabled = false;
-        document.getElementById('exportPdf').disabled = false;
-      })
-      .withFailureHandler(function(error) {
-        reportLoading.style.display = 'none';
-        showAlert('danger', 'Error generating report: ' + error);
-      })
-      .generateEmployeeTimeReport(startDate, startTime, endDate, endTime);
-  }
-}
 
 
 /**
@@ -3167,31 +3262,144 @@ function fetchTimeLogForEdit(logId, rowIndex) {
 
 
 
+
+
+
+//Prfit sharing functions
+// Function to handle profit sharing calculations
+// Function to handle profit sharing calculations
+function handleProfitSharing() {
+  const payPeriodId = document.getElementById('payPeriod').value;
+  const profitSharingAmount = parseFloat(document.getElementById('profitSharingAmount').value) || 0;
+  
+  if (!payPeriodId) {
+    showAlert('warning', 'Please select a pay period');
+    return;
+  }
+  
+  if (profitSharingAmount <= 0) {
+    showAlert('warning', 'Please enter a valid profit sharing amount');
+    return;
+  }
+  
+  // Get the pay period name from the select element
+  const payPeriodSelect = document.getElementById('payPeriod');
+  const payPeriodName = payPeriodSelect.options[payPeriodSelect.selectedIndex].text;
+  
+  showLoading();
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      
+      if (result.success) {
+        showAlert('success', 'Profit sharing information updated successfully');
+        
+        // Show details in a modal with pay period name included
+        const detailsHtml = `
+          <p><strong>Pay Period:</strong> ${payPeriodName}</p>
+          <p><strong>Total Profit Sharing Amount:</strong> $${result.totalAmount.toFixed(2)}</p>
+          <p><strong>Number of Recipients:</strong> ${result.numRecipients}</p>
+          <p><strong>Amount per Recipient:</strong> $${result.amountPerRecipient.toFixed(2)}</p>
+        `;
+        
+        showInfoModal('Profit Sharing Details', detailsHtml);
+      } else {
+        showAlert('danger', 'Error: ' + result.message);
+      }
+    })
+    .withFailureHandler(function(error) {
+      hideLoading();
+      showAlert('danger', 'Error updating profit sharing: ' + error);
+    })
+    .updateProfitSharingInfo(payPeriodId, profitSharingAmount);
+}
+
+// Function to display an information modal
+function showInfoModal(title, content) {
+  // Create modal element if it doesn't exist
+  let infoModal = document.getElementById('infoModal');
+  
+  if (!infoModal) {
+    infoModal = document.createElement('div');
+    infoModal.className = 'modal fade';
+    infoModal.id = 'infoModal';
+    infoModal.setAttribute('tabindex', '-1');
+    infoModal.setAttribute('aria-hidden', 'true');
+    
+    infoModal.innerHTML = `
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(infoModal);
+  }
+  
+  // Set the modal content
+  infoModal.querySelector('.modal-title').textContent = title;
+  infoModal.querySelector('.modal-body').innerHTML = content;
+  
+  // Show the modal
+  const modal = new bootstrap.Modal(infoModal);
+  modal.show();
+}
+
+// Load profit sharing information when a pay period is selected
+function loadProfitSharingInfo() {
+  const payPeriodId = document.getElementById('payPeriod').value;
+  
+  if (!payPeriodId) return;
+  
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        document.getElementById('profitSharingAmount').value = result.totalAmount > 0 ? result.totalAmount : '';
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error loading profit sharing info:', error);
+    })
+    .getProfitSharingInfo(payPeriodId);
+}
+
+
     </script>
 
-    <!-- Hidden report template for PDF export -->
-    <div id="reportTemplate" style="display: none;">
-      <div class="pdf-report">
-        <h1>Humboldt Machine Time Report</h1>
-        <p class="report-period"></p>
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th style="width: 25%;">Employee Name</th>
-              <th style="width: 15%;">Total Hours Worked</th>
-              <th style="width: 15%;">Regular Break Time (hrs)</th>
-              <th style="width: 15%;">Lunch Break Time (hrs)</th>
-              <th style="width: 15%;">Shifts w/ Qualifying Paid Breaks</th>
-              <th style="width: 15%;">Total Hours w/ Paid Breaks</th>
-            </tr>
-          </thead>
-          <tbody id="reportTableBody">
-            <!-- Report data will be populated here -->
-          </tbody>
-        </table>
-        <p class="report-footer"></p>
-      </div>
-    </div>
+<!-- Hidden report template for PDF export -->
+<div id="reportTemplate" style="display: none;">
+  <div class="pdf-report">
+    <h1>Humboldt Machine Time Report</h1>
+    <p class="report-period"></p>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th style="width: 20%;">Employee Name</th>
+          <th style="width: 15%;">Employment Type</th>
+          <th style="width: 10%;">Hourly Rate</th>
+          <th style="width: 12%;">Regular Hours</th>
+          <th style="width: 12%;">Overtime Hours</th>
+          <th style="width: 15%;">Paid Break Hours</th>
+          <th style="width: 16%;">Profit Sharing $</th>
+        </tr>
+      </thead>
+      <tbody id="reportTableBody">
+        <!-- Report data will be populated here -->
+      </tbody>
+    </table>
+    <p class="report-footer"></p>
+  </div>
+</div>
+
 
 
     <style>
