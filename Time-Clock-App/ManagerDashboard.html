@@ -111,6 +111,7 @@ h2 {
 
 .card-body {
   padding: 20px;
+  padding-right: 20px; /* Ensure proper padding on the right side */
 }
 
 .card-title {
@@ -127,10 +128,13 @@ h2 {
   max-height: 550px;
   overflow-y: auto;
   background-color: #ffffff;
+  width: 100%; /* Ensure container takes full width */
 }
 
 .employee-table, .table {
   margin-bottom: 0;
+  width: 100%; /* Ensure table takes full width of container */
+  table-layout: fixed; /* Use fixed layout for better control */
 }
 
 .employee-table th, .table th {
@@ -147,6 +151,37 @@ h2 {
   border-bottom: 2px solid #e2e8f0;
 }
 
+/* Adjust column widths to distribute space better */
+.employee-table th:first-child {
+  width: 5%; /* ID column */
+}
+
+.employee-table th:nth-child(2),
+.employee-table th:nth-child(3) {
+  width: 12%; /* First and Last name columns */
+}
+
+.employee-table th:nth-child(4) {
+  width: 15%; /* Department column */
+}
+
+.employee-table th:nth-child(5) {
+  width: 20%; /* Email column */
+}
+
+.employee-table th:nth-child(6) {
+  width: 15%; /* Shift column */
+}
+
+.employee-table th:nth-child(7) {
+  width: 8%; /* Status column */
+}
+
+.employee-table th:last-child {
+  width: 13%; /* Actions column */
+  text-align: center; /* Center the actions header */
+}
+
 .employee-table td, .table td {
   padding: 14px 16px;
   vertical-align: middle;
@@ -160,6 +195,13 @@ h2 {
 .employee-table tbody tr:hover, .table tbody tr:hover {
   background-color: #f1f5f9;
   transform: scale(1.01);
+}
+
+/* Center the action buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
 }
 
 /* Button styles */
@@ -406,6 +448,7 @@ tr:hover .flagged-log {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
     </style>
   </head>
   <body>
@@ -496,139 +539,144 @@ tr:hover .flagged-log {
           </div>
           
           <!-- Add/Edit Employee Form -->
-          <div id="employee-form-section" class="form-section">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h2 id="form-title">Add New Employee</h2>
-              <button id="back-to-list" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to List
-              </button>
-            </div>
-            
-            <div class="card">
-              <div class="card-body">
-                <form id="employee-form">
-                  <input type="hidden" id="employee-id">
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="first-name" class="form-label">First Name *</label>
-                      <input type="text" class="form-control" id="first-name" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="last-name" class="form-label">Last Name *</label>
-                      <input type="text" class="form-control" id="last-name" required>
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="department" class="form-label">Department</label>
-                      <input type="text" class="form-control" id="department">
-                    </div>
-                    <div class="col-md-6">
-                      <label for="email" class="form-label">Email</label>
-                      <input type="email" class="form-control" id="email">
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="pin" class="form-label">PIN *</label>
-                      <div class="input-group">
-                        <input type="text" class="form-control" id="pin" required>
-                        <button type="button" class="btn btn-outline-secondary" id="generate-pin">Generate</button>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="manager-email" class="form-label">Manager Email</label>
-                      <input type="email" class="form-control" id="manager-email">
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="hire-date" class="form-label">Hire Date *</label>
-                      <input type="date" class="form-control" id="hire-date" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="status" class="form-label">Status *</label>
-                      <select class="form-select" id="status" required>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="shift" class="form-label">Shift</label>
-                      <select class="form-select" id="shift">
-                        <option value="">No Shift Assigned</option>
-                        <!-- Shift options will be populated dynamically -->
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="shift-id" class="form-label">Shift ID</label>
-                      <input type="text" class="form-control" id="shift-id" readonly>
-                    </div>
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="company" class="form-label">Company</label>
-                      <select class="form-select" id="company">
-                        <option value="">Not Set</option>
-                        <option value="Humboldt">Humboldt</option>
-                        <option value="Trigger2a">Trigger2a</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="employment-type" class="form-label">Employment Type</label>
-                      <select class="form-select" id="employment-type">
-                        <option value="">Not Set</option>
-                        <option value="W-4">W-4</option>
-                        <option value="Independent Contractor">Independent Contractor</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="schedule-type" class="form-label">Schedule Type</label>
-                      <select class="form-select" id="schedule-type">
-                        <option value="">Not Set</option>
-                        <option value="Full Time">Full Time</option>
-                        <option value="Part Time">Part Time</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="payment-type" class="form-label">Payment Type</label>
-                      <select class="form-select" id="payment-type">
-                        <option value="">Not Set</option>
-                        <option value="Hourly">Hourly</option>
-                        <option value="Salary">Salary</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <label for="hourly-rate" class="form-label">Hourly Rate</label>
-                      <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input type="number" class="form-control" id="hourly-rate" step="0.01" min="0">
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="d-flex justify-content-end mt-4">
-                    <button type="button" class="btn btn-secondary me-2" id="cancel-form">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Employee</button>
-                  </div>
-                </form>
-              </div>
+<div id="employee-form-section" class="form-section">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 id="form-title">Add New Employee</h2>
+    <button id="back-to-list" class="btn btn-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Back to List
+    </button>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <form id="employee-form">
+        <input type="hidden" id="employee-id">
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="first-name" class="form-label">First Name *</label>
+            <input type="text" class="form-control" id="first-name" required>
+          </div>
+          <div class="col-md-6">
+            <label for="last-name" class="form-label">Last Name *</label>
+            <input type="text" class="form-control" id="last-name" required>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="department" class="form-label">Department</label>
+            <input type="text" class="form-control" id="department">
+          </div>
+          <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email">
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="pin" class="form-label">PIN *</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="pin" required>
+              <button type="button" class="btn btn-outline-secondary" id="generate-pin">Generate</button>
             </div>
           </div>
+          <div class="col-md-6">
+            <label for="manager-email" class="form-label">Manager Email</label>
+            <input type="email" class="form-control" id="manager-email">
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="hire-date" class="form-label">Hire Date *</label>
+            <input type="date" class="form-control" id="hire-date" required>
+          </div>
+          <div class="col-md-6">
+            <label for="status" class="form-label">Status *</label>
+            <select class="form-select" id="status" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="shift" class="form-label">Shift</label>
+            <select class="form-select" id="shift">
+              <option value="">No Shift Assigned</option>
+              <!-- Shift options will be populated dynamically -->
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="hourly-rate" class="form-label">Hourly Rate</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="hourly-rate" step="0.01" min="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="company" class="form-label">Company</label>
+            <select class="form-select" id="company">
+              <option value="">Not Set</option>
+              <option value="Humboldt">Humboldt</option>
+              <option value="Trigger2a">Trigger2a</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="employment-type" class="form-label">Employment Type</label>
+            <select class="form-select" id="employment-type">
+              <option value="">Not Set</option>
+              <option value="W-4">W-4</option>
+              <option value="Independent Contractor">Independent Contractor</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="schedule-type" class="form-label">Schedule Type</label>
+            <select class="form-select" id="schedule-type">
+              <option value="">Not Set</option>
+              <option value="Full Time">Full Time</option>
+              <option value="Part Time">Part Time</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="payment-type" class="form-label">Payment Type</label>
+            <select class="form-select" id="payment-type">
+              <option value="">Not Set</option>
+              <option value="Hourly">Hourly</option>
+              <option value="Salary">Salary</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- New Profit Sharing Information (Display Only) -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="profit-sharing-eligible" class="form-label">Is Eligible for Profit Sharing</label>
+            <input type="text" class="form-control" id="profit-sharing-eligible" readonly>
+          </div>
+          <div class="col-md-6">
+            <label for="profit-sharing-date" class="form-label">Date Eligible for Profit Sharing</label>
+            <input type="text" class="form-control" id="profit-sharing-date" readonly>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary me-2" id="cancel-form">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
           
           <!-- Time Tracking Tab -->
           <div id="time-tracking-tab" class="tab-content" style="display: none;">
@@ -1400,11 +1448,8 @@ function initializeDateTimePickers() {
         document.getElementById('hire-date').value = today;
       }
       
-      // Show Edit Employee Form
+// Show Edit Employee Form
 function showEditEmployeeForm(employeeId) {
-  
-  
-  
   // Find employee data
   const employee = employees.find(emp => emp.id == employeeId);
   if (!employee) return;
@@ -1430,7 +1475,7 @@ function showEditEmployeeForm(employeeId) {
   document.getElementById('hire-date').value = formatDateForInput(employee.hireDate) || '';
   document.getElementById('status').value = employee.status || 'Active';
   document.getElementById('shift').value = employee.shift || '';
-  document.getElementById('shift-id').value = employee.shiftId || '';
+  // Removed shift-id field
   
   // Populate new fields
   document.getElementById('company').value = employee.company || '';
@@ -1438,7 +1483,12 @@ function showEditEmployeeForm(employeeId) {
   document.getElementById('schedule-type').value = employee.scheduleType || '';
   document.getElementById('payment-type').value = employee.paymentType || '';
   document.getElementById('hourly-rate').value = employee.hourlyRate || '';
+  
+  // Populate profit sharing fields (display only)
+  document.getElementById('profit-sharing-eligible').value = employee.eligibleForProfitSharing || 'No';
+  document.getElementById('profit-sharing-date').value = employee.dateEligibleForProfitSharing || '';
 }
+
       
       // Hide Employee Form
       function hideEmployeeForm() {
@@ -1485,7 +1535,13 @@ function handleEmployeeFormSubmit(e) {
   const hireDate = document.getElementById('hire-date').value;
   const status = document.getElementById('status').value;
   const shift = document.getElementById('shift').value;
-  const shiftId = document.getElementById('shift-id').value;
+  
+  // Find shift ID based on selected shift name
+  let shiftId = '';
+  if (shift) {
+    const selectedShiftData = shifts.find(s => s.name === shift);
+    shiftId = selectedShiftData ? selectedShiftData.id : '';
+  }
   
   // Get new field values
   const company = document.getElementById('company').value;
@@ -1521,6 +1577,7 @@ function handleEmployeeFormSubmit(e) {
     .withFailureHandler(onSaveError)
     .saveEmployee(employeeData);
 }
+
       
       // Handle successful save
       function onEmployeeSaved(result) {

@@ -1848,10 +1848,10 @@ function getEmployees() {
       const employeeSheet = ss.getSheetByName('Employee Master Data');
       const employeeData = employeeSheet.getDataRange().getValues();
       
-      // Extract header row
+      // Extract header row first
       const headers = employeeData[0];
       
-      // Find column indexes
+      // Now find column indexes
       const idIndex = headers.indexOf('Employee ID');
       const firstNameIndex = headers.indexOf('First Name');
       const lastNameIndex = headers.indexOf('Last Name');
@@ -1870,6 +1870,10 @@ function getEmployees() {
       const scheduleTypeIndex = headers.indexOf('Schedule type');
       const paymentTypeIndex = headers.indexOf('Payment type');
       const hourlyRateIndex = headers.indexOf('Hourly rate');
+      
+      // Find profit sharing fields
+      const eligibleForProfitSharingIdx = headers.indexOf('Eligible for Profit Sharing');
+      const dateEligibleForProfitSharingIdx = headers.indexOf('Date Eligible for Profit Sharing');
       
       // Map data to objects
       const employees = [];
@@ -1904,16 +1908,23 @@ function getEmployees() {
           employmentType: employmentTypeIndex >= 0 ? row[employmentTypeIndex] : '',
           scheduleType: scheduleTypeIndex >= 0 ? row[scheduleTypeIndex] : '',
           paymentType: paymentTypeIndex >= 0 ? row[paymentTypeIndex] : '',
-          hourlyRate: hourlyRateIndex >= 0 ? row[hourlyRateIndex] : ''
+          hourlyRate: hourlyRateIndex >= 0 ? row[hourlyRateIndex] : '',
+          // Add profit sharing fields
+          eligibleForProfitSharing: eligibleForProfitSharingIdx >= 0 ? row[eligibleForProfitSharingIdx] : '',
+          dateEligibleForProfitSharing: dateEligibleForProfitSharingIdx >= 0 ? 
+            (row[dateEligibleForProfitSharingIdx] instanceof Date ? 
+              Utilities.formatDate(row[dateEligibleForProfitSharingIdx], Session.getScriptTimeZone(), "MM/dd/yyyy") : 
+              row[dateEligibleForProfitSharingIdx]) : ''
         });
       }
       
       return employees;
     } catch (error) {
-      Logger.log("Error in getEmployeesForManager: " + error.toString());
+      Logger.log("Error in getEmployees: " + error.toString());
       return [];
     }
   }
+
 
   
   // Function to get all shifts
@@ -5586,7 +5597,14 @@ function calculateProfitSharingEligibility(employeeId = null) {
       // Use Full Time Start Date if available, otherwise fall back to Hire Date
       const startDate = (fullTimeStartDate && fullTimeStartDate instanceof Date) ? fullTimeStartDate : hireDate;
       
+      // Handle invalid start date
       if (!startDate || !(startDate instanceof Date)) {
+        // Set "Error" in eligibility column
+        employeeSheet.getRange(i + 1, eligibilityIdx + 1).setValue("Error");
+        
+        // Set error message in eligibility date column
+        employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).setValue("Missing hire date or Full time start date");
+        
         results.push({
           employeeId: employeeData[i][idIdx],
           success: false,
@@ -5633,12 +5651,14 @@ function calculateProfitSharingEligibility(employeeId = null) {
       }
       employeeSheet.getRange(i + 1, eligibilityIdx + 1).setNote(noteText);
       
-      // Update the eligibility date in column W, but only if they meet the schedule type requirement
+      // Update the eligibility date in column W
       if (isFullTime) {
+        // If they're full time, show the eligibility date
         employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).setValue(eligibilityDate);
       } else {
-        // Clear the eligibility date if they're not full time
-        employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).clearContent();
+        // If they're not full time, show the reason they're not eligible
+        const reason = `Not eligible: Schedule type is "${scheduleType || 'Not Set'}" (must be "Full Time")`;
+        employeeSheet.getRange(i + 1, eligibilityDateIdx + 1).setValue(reason);
       }
       
       // Format the start date for display
@@ -5674,6 +5694,7 @@ function calculateProfitSharingEligibility(employeeId = null) {
     return { success: false, message: error.toString() };
   }
 }
+
 
 
 
