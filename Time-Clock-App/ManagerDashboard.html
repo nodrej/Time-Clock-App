@@ -137,6 +137,12 @@ h2 {
   table-layout: fixed; /* Use fixed layout for better control */
 }
 
+/* No height restriction for attendance results */
+#attendance-results-container .table-container {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .employee-table th, .table th {
   background-color: #f8fafc;
   color: #1e293b;
@@ -687,35 +693,70 @@ tr:hover .flagged-log {
               </button>
             </div>
             
-            <!-- Filter Section -->
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Filters</h5>
-                <div class="filter-section">
-                  <div class="filter-item">
-                    <label for="dateFilter" class="form-label">Date</label>
-                    <input type="text" id="dateFilter" class="form-control flatpickr-date" placeholder="Select date">
-                  </div>
-                  <div class="filter-item">
-                    <label for="employeeFilter" class="form-label">Employee</label>
-                    <select id="employeeFilter" class="form-select">
-                      <option value="">All Employees</option>
-                      <!-- Will be populated dynamically -->
-                    </select>
-                  </div>
-                  <div class="form-check ms-3">
-                    <input class="form-check-input" type="checkbox" id="missedMinutesFilter">
-                    <label class="form-check-label" for="missedMinutesFilter">
-                      Has Missed Minutes
-                    </label>
-                  </div>
-                  <div class="filter-item d-flex align-items-end">
-                    <button id="applyFilters" class="btn btn-primary">Apply Filters</button>
-                    <button id="clearFilters" class="btn btn-outline-secondary ms-2">Clear</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+           <!-- Filter Section -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Filters</h5>
+    <div class="filter-section">
+      <!-- Date Filter Type Selection -->
+      <div class="filter-item mb-3">
+        <label class="form-label">Date Filter Type</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="dateFilterType" id="singleDateFilter" value="single" checked>
+          <label class="form-check-label" for="singleDateFilter">
+            Single Date
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="dateFilterType" id="dateRangeFilter" value="range">
+          <label class="form-check-label" for="dateRangeFilter">
+            Date Range
+          </label>
+        </div>
+      </div>
+
+      <!-- Single Date Filter (Original) -->
+      <div class="filter-item" id="singleDateFilterContainer">
+        <label for="dateFilter" class="form-label">Date</label>
+        <input type="text" id="dateFilter" class="form-control flatpickr-date" placeholder="Select date">
+      </div>
+      
+      <!-- Date Range Filter (New) -->
+      <div class="filter-item" id="dateRangeFilterContainer" style="display: none;">
+        <div class="row">
+          <div class="col-md-6">
+            <label for="startDateFilter" class="form-label">Start Date</label>
+            <input type="text" id="startDateFilter" class="form-control flatpickr-date" placeholder="Start date">
+          </div>
+          <div class="col-md-6">
+            <label for="endDateFilter" class="form-label">End Date</label>
+            <input type="text" id="endDateFilter" class="form-control flatpickr-date" placeholder="End date">
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-item">
+        <label for="employeeFilter" class="form-label">Employee</label>
+        <select id="employeeFilter" class="form-select">
+          <option value="">All Employees</option>
+          <!-- Will be populated dynamically -->
+        </select>
+      </div>
+      
+      <div class="form-check ms-3">
+        <input class="form-check-input" type="checkbox" id="missedMinutesFilter">
+        <label class="form-check-label" for="missedMinutesFilter">
+          Has Missed Minutes
+        </label>
+      </div>
+      
+      <div class="filter-item d-flex align-items-end">
+        <button id="applyFilters" class="btn btn-primary">Apply Filters</button>
+        <button id="clearFilters" class="btn btn-outline-secondary ms-2">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
             
             <!-- Time Logs Table -->
             <div class="card">
@@ -981,7 +1022,7 @@ tr:hover .flagged-log {
           <div class="col-md-4">
             <div class="card">
               <div class="card-body text-center">
-                <h5 class="card-title">Late Minutes</h5>
+                <h5 class="card-title">Late Arrival Minutes</h5>
                 <h3 id="details-late-minutes">0</h3>
               </div>
             </div>
@@ -989,7 +1030,7 @@ tr:hover .flagged-log {
           <div class="col-md-4">
             <div class="card">
               <div class="card-body text-center">
-                <h5 class="card-title">Early Departure</h5>
+                <h5 class="card-title">Early Departure Mintues</h5>
                 <h3 id="details-early-minutes">0</h3>
               </div>
             </div>
@@ -997,7 +1038,7 @@ tr:hover .flagged-log {
           <div class="col-md-4">
             <div class="card">
               <div class="card-body text-center">
-                <h5 class="card-title">Break Violations</h5>
+                <h5 class="card-title">Break Violation Minutes</h5>
                 <h3 id="details-break-minutes">0</h3>
               </div>
             </div>
@@ -1266,6 +1307,9 @@ tr:hover .flagged-log {
         // Initialize date/time pickers
         initializeDateTimePickers();
 
+          // Initialize the time tracking tab functionality
+          initializeTimeTrackingTab();
+
         // Initialize time tracking modal
   editTimeLogModal = new bootstrap.Modal(document.getElementById('editTimeLogModal'));
   createTimeLogModal = new bootstrap.Modal(document.getElementById('createTimeLogModal'));
@@ -1410,13 +1454,13 @@ function initializeClearButtons() {
 
 // Initialize date/time pickers
 function initializeDateTimePickers() {
-  // Initialize date pickers
+  // Initialize all date pickers
   flatpickr(".flatpickr-date", {
     dateFormat: "Y-m-d",
     allowInput: true
   });
   
-  // Initialize time pickers with the same configuration as Reports tab
+  // Initialize time pickers
   flatpickr(".flatpickr-time", {
     enableTime: true,
     noCalendar: true,
@@ -1849,10 +1893,23 @@ function handleEmployeeFormSubmit(e) {
           .getEmployees(); // Use the same method as the employee section
       }
       
-      // Update the loadTimeLogs function to include the missed minutes filter
+// Update the loadTimeLogs function to handle date range
 function loadTimeLogs() {
   showLoading();
-  const dateFilter = document.getElementById('dateFilter').value;
+  
+  // Get filter values based on the selected filter type
+  const dateFilterType = document.querySelector('input[name="dateFilterType"]:checked').value;
+  let dateFilter = '';
+  let startDateFilter = '';
+  let endDateFilter = '';
+  
+  if (dateFilterType === 'single') {
+    dateFilter = document.getElementById('dateFilter').value;
+  } else {
+    startDateFilter = document.getElementById('startDateFilter').value;
+    endDateFilter = document.getElementById('endDateFilter').value;
+  }
+  
   const employeeFilter = document.getElementById('employeeFilter').value;
   const missedMinutesFilter = document.getElementById('missedMinutesFilter').checked;
   
@@ -1898,9 +1955,42 @@ function loadTimeLogs() {
       hideLoading();
     })
     .withFailureHandler(handleError)
-    .getTimeLogs(dateFilter, employeeFilter, missedMinutesFilter);
+    .getTimeLogsWithDateRange(dateFilter, startDateFilter, endDateFilter, employeeFilter, missedMinutesFilter);
 }
       
+// Initialize date filter type toggle
+function initializeTimeTrackingTab() {
+  // Add event listeners for date filter type toggle
+  document.querySelectorAll('input[name="dateFilterType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.value === 'single') {
+        document.getElementById('singleDateFilterContainer').style.display = 'block';
+        document.getElementById('dateRangeFilterContainer').style.display = 'none';
+      } else {
+        document.getElementById('singleDateFilterContainer').style.display = 'none';
+        document.getElementById('dateRangeFilterContainer').style.display = 'block';
+      }
+    });
+  });
+  
+  // Update the clear filters button to handle both filter types
+  document.getElementById('clearFilters').addEventListener('click', function() {
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('startDateFilter').value = '';
+    document.getElementById('endDateFilter').value = '';
+    document.getElementById('employeeFilter').value = '';
+    document.getElementById('missedMinutesFilter').checked = false;
+    
+    // Reset to single date filter
+    document.getElementById('singleDateFilter').checked = true;
+    document.getElementById('singleDateFilterContainer').style.display = 'block';
+    document.getElementById('dateRangeFilterContainer').style.display = 'none';
+    
+    loadTimeLogs();
+  });
+}
+
+
 // Open edit modal with time log data
 function openEditModal(logData) {
   // Populate form fields
